@@ -72,7 +72,8 @@ export async function buildIndex(root, { commit, committedAt }) {
       name: item.name,
       description: item.description,
       tags: item.tags ?? [],
-      requires: connectionRequires(item.manifest),
+      // What a connection type needs; a template says it in its package, which the hub reads from the item file.
+      ...(kind === "connection" ? { requires: connectionRequires(item.manifest) } : {}),
       // The mark comes from the maintainers' list, never from the item file; the hub trusts it because the index is signed.
       ...(OFFICIAL_CONNECTIONS.has(id) ? { official: true } : {}),
     }));

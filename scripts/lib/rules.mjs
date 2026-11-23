@@ -1,7 +1,9 @@
-// The rules a JSON Schema cannot say. A connection type follows the hub (connection-rules.mjs), and nothing in an
-// item is code that runs.
+// The rules a JSON Schema cannot say. A connection type follows the hub (connection-rules.mjs), a template too
+// (template-rules.mjs), and nothing in an item is code that runs.
 import { readFileSync } from "node:fs";
 import { connectionRules } from "./connection-rules.mjs";
+import { hiddenText } from "./hidden-text.mjs";
+import { templateRules } from "./template-rules.mjs";
 
 const readJson = (path) => JSON.parse(readFileSync(new URL(path, import.meta.url), "utf8"));
 const officialList = readJson("./official-connections.json");
@@ -27,20 +29,6 @@ const OFFICIAL_NAMES = new Map(
 
 const isObject = (v) => typeof v === "object" && v !== null && !Array.isArray(v);
 const field = (...parts) => parts.join(".");
-
-/**
- * What hides or reorders the text the person reads, the characters the app refuses in a connection type: bidi controls,
- * a zero width space or word joiner on its own, and control characters other than \n and \t. ZWJ, ZWNJ and the soft
- * hyphen compose emoji and words, and pass.
- */
-const HIDES_TEXT = /[\u061C\u200E\u200F\u202A-\u202E\u2066-\u2069\u200B\u2060\uFEFF\u0000-\u0008\u000B-\u001F\u007F-\u009F]/u;
-
-function hiddenText(value, at) {
-  const found = typeof value === "string" ? HIDES_TEXT.exec(value) : null;
-  if (found === null) return [];
-  const code = found[0].codePointAt(0).toString(16).toUpperCase().padStart(4, "0");
-  return [{ field: at, message: `has the invisible or control character U+${code}, which hides or reorders what the person reads` }];
-}
 
 /** The same, for each language of a `{ en, pt-BR }` text. */
 function hiddenLocalized(value, at) {
@@ -75,6 +63,7 @@ export function itemRules(item, expected) {
     }
     errors.push(...hiddenInManifest(item.manifest, "manifest"), ...connectionRules(item));
   }
+  if (item.kind === "template") errors.push(...templateRules(item));
   return errors;
 }
 

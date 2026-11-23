@@ -1,0 +1,105 @@
+{
+  "name": "the account of a Teams action (catalog convention, the hub accepts it)",
+  "accept": false,
+  "hub_accepts": true,
+  "item": {
+    "kind": "template",
+    "id": "example",
+    "version": 1,
+    "name": {
+      "en": "Example",
+      "pt-BR": "Exemplo"
+    },
+    "description": {
+      "en": "An example template.",
+      "pt-BR": "Um modelo de exemplo."
+    },
+    "tags": [
+      "example"
+    ],
+    "package": {
+      "format": "automation-package",
+      "version": 1,
+      "automation": {
+        "id": "example",
+        "name": "Example",
+        "definition": {
+          "schema_version": 18,
+          "name": "Example",
+          "voice_agent": "",
+          "triggers": [
+            {
+              "kind": "manual"
+            }
+          ],
+          "steps": [
+            {
+              "key": "summary",
+              "name": "Summarize",
+              "kind": "model",
+              "agent": "writer",
+              "prompt": "Summarize the day.",
+              "output_schema": {
+                "type": "object",
+                "required": [
+                  "text"
+                ],
+                "properties": {
+                  "text": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            {
+              "key": "notify",
+              "name": "Notify",
+              "kind": "action",
+              "action": "desktop.notify",
+              "mode": "auto",
+              "needs": [
+                "summary"
+              ],
+              "params": {
+                "title": "Example",
+                "body": "{{steps.summary.text}}"
+              }
+            },
+            {
+              "key": "post",
+              "kind": "action",
+              "action": "teams.post",
+              "mode": "approve",
+              "needs": [
+                "summary"
+              ],
+              "params": {
+                "text": "x",
+                "account": "work"
+              }
+            }
+          ]
+        }
+      },
+      "agents": [
+        {
+          "slug": "writer",
+          "name": "Writer",
+          "when_to_use": "To write summaries.",
+          "instructions": "Write short summaries.",
+          "model": "haiku",
+          "tools": [],
+          "kind": "specialist",
+          "specialists": []
+        }
+      ],
+      "requirements": {
+        "connections": [],
+        "apps": [],
+        "servers": [],
+        "agents": [],
+        "to_fill": []
+      }
+    }
+  }
+}

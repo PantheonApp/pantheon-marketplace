@@ -46,10 +46,10 @@ test("the index has what the hub reads: format, version 1, commit, committedAt, 
   assert.equal(index.committedAt, 1792000000);
   assert.deepEqual(Object.keys(index), ["format", "version", "commit", "committedAt", "items", "retired"]);
   assert.deepEqual(index.retired, {});
-  assert.deepEqual(index.items.map((i) => `${i.kind}:${i.id}`), ["connection:github"]);
+  assert.deepEqual(index.items.map((i) => `${i.kind}:${i.id}`), ["template:alertas-do-canal", "connection:github", "template:responder-thread-de-review", "template:revisar-prs-teams"]);
   for (const entry of index.items) {
     const bytes = readFileSync(join(root, entry.path));
-    assert.equal(entry.path, `connections/${entry.id}.json`);
+    assert.equal(entry.path, `${entry.kind}s/${entry.id}.json`);
     assert.equal(entry.sha256, createHash("sha256").update(bytes).digest("hex"));
     // The hub leaves out an item whose file says another id or version than its entry.
     const item = JSON.parse(bytes.toString("utf8"));

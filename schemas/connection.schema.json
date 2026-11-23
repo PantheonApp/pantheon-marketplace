@@ -20,7 +20,8 @@
       "minLength": 1,
       "maxLength": 40
     },
-    "manifest": { "$ref": "#/$defs/manifest" }
+    "manifest": { "$ref": "#/$defs/manifest" },
+    "package": { "description": "The body of a template. A connection type carries manifest.", "not": {} }
   },
   "$defs": {
     "text": {

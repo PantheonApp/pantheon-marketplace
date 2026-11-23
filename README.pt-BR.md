@@ -2,17 +2,22 @@
 
 [English](README.md)
 
-Catálogo do Pantheon: os tipos de conexão que a organização instala com um
-clique no hub. Qualquer pessoa pode propor um item por PR.
+Catálogo do Pantheon: os tipos de conexão e os modelos de automação que a
+organização instala com um clique no hub. Qualquer pessoa pode propor um item por PR.
 
 ## O que mora aqui
 
 - `connections/`: tipos de conexão. Cada um diz onde roda, como a pessoa entra
   (OAuth, token, CLI ou nenhum), com qual servidor MCP remoto ele fala e o que
   libera. Hoje: GitHub.
-- `templates/` e `packages/`: ainda não recebem item, e a esteira recusa
-  arquivo nelas. Hoje o catálogo recebe só tipos de conexão; modelos de
-  automação e pacotes chegam depois, com plano próprio.
+- `templates/`: modelos de automação. Cada um embrulha o pacote de automação
+  que o hub exporta (`automation-package`, versão 1): a definição da automação e
+  os agentes que os passos dela citam. Quando a instalação pelo catálogo chegar
+  ao hub, instalar um vai fazer uma proposta no hub, que a pessoa revisa antes de
+  salvar. A voz do modelo fica em branco de propósito: o hub preenche a voz de
+  quem instala antes de conferir. Hoje: revisar PRs pelo Teams, responder em
+  thread de review, alertas do canal.
+- `packages/`: ainda não recebe item, e a esteira recusa arquivo nela.
 
 Cada item é um arquivo JSON em `<pasta>/<id>.json`. Os esquemas estão em
 [`schemas/`](schemas/), e o [CONTRIBUTING.pt-BR.md](CONTRIBUTING.pt-BR.md)

@@ -1,0 +1,126 @@
+{
+  "name": "more than 32 tools",
+  "accept": false,
+  "item": {
+    "kind": "template",
+    "id": "example",
+    "version": 1,
+    "name": {
+      "en": "Example",
+      "pt-BR": "Exemplo"
+    },
+    "description": {
+      "en": "An example template.",
+      "pt-BR": "Um modelo de exemplo."
+    },
+    "tags": [
+      "example"
+    ],
+    "package": {
+      "format": "automation-package",
+      "version": 1,
+      "automation": {
+        "id": "example",
+        "name": "Example",
+        "definition": {
+          "schema_version": 18,
+          "name": "Example",
+          "voice_agent": "",
+          "triggers": [
+            {
+              "kind": "manual"
+            }
+          ],
+          "steps": [
+            {
+              "key": "summary",
+              "name": "Summarize",
+              "kind": "model",
+              "agent": "writer",
+              "prompt": "Summarize the day.",
+              "output_schema": {
+                "type": "object",
+                "required": [
+                  "text"
+                ],
+                "properties": {
+                  "text": {
+                    "type": "string"
+                  }
+                }
+              },
+              "tools": [
+                "github__tool_0",
+                "github__tool_1",
+                "github__tool_2",
+                "github__tool_3",
+                "github__tool_4",
+                "github__tool_5",
+                "github__tool_6",
+                "github__tool_7",
+                "github__tool_8",
+                "github__tool_9",
+                "github__tool_10",
+                "github__tool_11",
+                "github__tool_12",
+                "github__tool_13",
+                "github__tool_14",
+                "github__tool_15",
+                "github__tool_16",
+                "github__tool_17",
+                "github__tool_18",
+                "github__tool_19",
+                "github__tool_20",
+                "github__tool_21",
+                "github__tool_22",
+                "github__tool_23",
+                "github__tool_24",
+                "github__tool_25",
+                "github__tool_26",
+                "github__tool_27",
+                "github__tool_28",
+                "github__tool_29",
+                "github__tool_30",
+                "github__tool_31",
+                "github__tool_32"
+              ]
+            },
+            {
+              "key": "notify",
+              "name": "Notify",
+              "kind": "action",
+              "action": "desktop.notify",
+              "mode": "auto",
+              "needs": [
+                "summary"
+              ],
+              "params": {
+                "title": "Example",
+                "body": "{{steps.summary.text}}"
+              }
+            }
+          ]
+        }
+      },
+      "agents": [
+        {
+          "slug": "writer",
+          "name": "Writer",
+          "when_to_use": "To write summaries.",
+          "instructions": "Write short summaries.",
+          "model": "haiku",
+          "tools": [],
+          "kind": "specialist",
+          "specialists": []
+        }
+      ],
+      "requirements": {
+        "connections": [],
+        "apps": [],
+        "servers": [],
+        "agents": [],
+        "to_fill": []
+      }
+    }
+  }
+}

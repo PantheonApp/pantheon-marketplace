@@ -1,0 +1,122 @@
+{
+  "kind": "template",
+  "id": "alertas-do-canal",
+  "version": 1,
+  "name": {
+    "en": "Channel alerts",
+    "pt-BR": "Alertas do canal"
+  },
+  "description": {
+    "en": "Watches the alerts posted in Teams channels you pick and tells you on this machine, in a few lines, what needs attention. A cheap model filters routine notices and alerts that already recovered. Nothing is written outside: the summary is a local notification. You pick the channels when installing.",
+    "pt-BR": "Observa os alertas postados nos canais do Teams que você escolher e avisa nesta máquina, em poucas linhas, o que precisa de atenção. Um modelo barato descarta aviso de rotina e alerta que já se resolveu. Nada é escrito fora: o resumo é uma notificação local. Os canais você escolhe ao instalar."
+  },
+  "tags": [
+    "alerts",
+    "teams"
+  ],
+  "package": {
+    "format": "automation-package",
+    "version": 1,
+    "automation": {
+      "id": "alertas-do-canal",
+      "name": "Channel alerts",
+      "definition": {
+        "schema_version": 18,
+        "name": "Channel alerts",
+        "description": "Observa os alertas dos canais do Teams que você escolher e avisa nesta máquina, em poucas linhas, o que precisa de atenção.",
+        "voice_agent": "",
+        "triggers": [
+          {
+            "kind": "teams_inbox",
+            "mentions": false,
+            "dms": false,
+            "pr_links": false,
+            "channel_threads": {
+              "new_threads": true
+            },
+            "ai_filter": {
+              "question": "Esta mensagem é um alerta que pede atenção agora, como erro, queda, lentidão, fila crescendo ou limite estourado? Conta como não: alerta que já se resolveu sozinho, aviso de rotina, teste de alerta e conversa entre pessoas."
+            }
+          }
+        ],
+        "steps": [
+          {
+            "key": "resumir",
+            "name": "Summarize the alert",
+            "kind": "model",
+            "model": "haiku",
+            "max_turns": 4,
+            "needs": [],
+            "optional": false,
+            "prompt": "Uma mensagem nova chegou num canal de alertas que você acompanha. Diga em poucas linhas o que precisa de atenção.\n\n- title: o assunto em até 60 caracteres, começando pelo sistema ou serviço afetado quando a mensagem disser.\n- text: o que aconteceu, desde quando e o que a mensagem pede, em no máximo três frases. Não invente causa nem impacto que a mensagem não traz.\n- severity: high quando algo está fora do ar ou perdendo dado, medium quando está degradado ou vai piorar, low no resto.\n\nDe: {{event.author}}\n\nMensagem:\n{{event.text}}",
+            "output_schema": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "title",
+                "text",
+                "severity"
+              ],
+              "properties": {
+                "title": {
+                  "type": "string",
+                  "maxLength": 60
+                },
+                "text": {
+                  "type": "string"
+                },
+                "severity": {
+                  "type": "string",
+                  "enum": [
+                    "high",
+                    "medium",
+                    "low"
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "key": "avisar",
+            "name": "Notify on this machine",
+            "kind": "action",
+            "action": "desktop.notify",
+            "mode": "auto",
+            "needs": [
+              "resumir"
+            ],
+            "optional": false,
+            "params": {
+              "title": "{{steps.resumir.title}}",
+              "body": "{{steps.resumir.text}}"
+            }
+          }
+        ],
+        "limits": {
+          "per_run_micros": 200000,
+          "per_day_micros": 2000000,
+          "max_minutes": 30,
+          "max_reruns_per_subject": 5,
+          "on_limit": "pause"
+        }
+      }
+    },
+    "agents": [],
+    "requirements": {
+      "connections": [],
+      "apps": [
+        "teams"
+      ],
+      "servers": [
+        "ms365"
+      ],
+      "agents": [],
+      "to_fill": [
+        {
+          "path": "triggers[0]",
+          "field": "channels"
+        }
+      ]
+    }
+  }
+}

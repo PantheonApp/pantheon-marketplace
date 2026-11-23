@@ -16,7 +16,7 @@ async function schemas() {
   if (compiled !== undefined) return compiled;
   const ajv = new Ajv2020({ allErrors: true, strict: true, strictTypes: false, strictRequired: false });
   const byName = {};
-  for (const name of ["envelope", "connection"]) {
+  for (const name of ["envelope", "connection", "template"]) {
     const schema = JSON.parse(await readFile(join(schemasDir, `${name}.schema.json`), "utf8"));
     ajv.addSchema(schema);
     byName[name] = schema.$id;
@@ -46,6 +46,8 @@ function schemaErrors(validate) {
       if (e.keyword === "oneOf" && /^manifest\.tools\.\d+$/.test(at)) return { field: at, message: "a tool is a name, or an object with a name and, when present, read_only true or false" };
       if (e.keyword === "oneOf" && /^manifest\.scope_keys\.\d+$/.test(at)) return { field: at, message: "a scope key is a name, or an object with a description in pt-BR and en" };
       if (e.keyword === "oneOf" && /^manifest\.(triggers|actions)\.\d+$/.test(at)) return { field: at, message: "is a name, or an object whose label and description come in pt-BR and en" };
+      if (e.keyword === "not" && at === "manifest") return { field: at, message: "is the body of a connection type: a template carries package" };
+      if (e.keyword === "not" && at === "package") return { field: at, message: "is the body of a template: a connection type carries manifest" };
       if (e.keyword === "enum") return { field: at, message: `must be one of ${e.params.allowedValues.map((v) => JSON.stringify(v)).join(", ")}` };
       return { field: at, message: e.message };
     });
@@ -163,7 +165,7 @@ export async function checkFile(file) {
   const item = parsed.item;
   const expected = expectedFromPath(file);
   const all = await schemas();
-  const validate = all[item?.kind === "connection" ? "connection" : "envelope"];
+  const validate = all[item?.kind === "connection" || item?.kind === "template" ? item.kind : "envelope"];
   validate(item);
   const ruled = itemRules(item, expected);
   // A rule says more than the schema about the same field: keep the rule.
