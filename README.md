@@ -12,8 +12,10 @@ organization installs on its hub with one click. Anyone can propose an item with
   what it unlocks. Today: GitHub.
 - `templates/`: automation templates. Each one wraps the automation package the
   hub exports (`automation-package`, version 1): the definition of the
-  automation and the agents its steps name. Installing one makes a proposal on
-  the hub, which the person reviews before saving. Today: review PRs from Teams,
+  automation and the agents its steps name. Once the hub's install from the
+  catalog lands, installing one will make a proposal on the hub, which the
+  person reviews before saving. The voice of a template is blank on purpose:
+  the hub fills in the voice of whoever installs before it checks. Today: review PRs from Teams,
   reply in review threads, channel alerts.
 - `packages/`: takes no item yet, and the pipeline refuses a file in it.
 

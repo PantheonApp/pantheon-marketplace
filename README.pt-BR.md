@@ -12,8 +12,10 @@ organização instala com um clique no hub. Qualquer pessoa pode propor um item 
   libera. Hoje: GitHub.
 - `templates/`: modelos de automação. Cada um embrulha o pacote de automação
   que o hub exporta (`automation-package`, versão 1): a definição da automação e
-  os agentes que os passos dela citam. Instalar um faz uma proposta no hub, que a
-  pessoa revisa antes de salvar. Hoje: revisar PRs pelo Teams, responder em
+  os agentes que os passos dela citam. Quando a instalação pelo catálogo chegar
+  ao hub, instalar um vai fazer uma proposta no hub, que a pessoa revisa antes de
+  salvar. A voz do modelo fica em branco de propósito: o hub preenche a voz de
+  quem instala antes de conferir. Hoje: revisar PRs pelo Teams, responder em
   thread de review, alertas do canal.
 - `packages/`: ainda não recebe item, e a esteira recusa arquivo nela.
 

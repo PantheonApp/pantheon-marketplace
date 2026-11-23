@@ -110,8 +110,9 @@ Um modelo é uma automação que outra pessoa pode instalar. O arquivo é
 `version`, `name` e `description` em `en` e `pt-BR`, `tags`) e o corpo em
 `package`: o pacote de automação que o hub exporta com
 `GET /api/automations/{id}/package`, formato `automation-package`, versão 1.
-Instalar passa pela mesma importação, então vira uma proposta que a pessoa
-revisa, nunca uma automação que liga sozinha. O esquema é
+Quando a instalação pelo catálogo chegar ao hub, instalar vai passar pela mesma
+importação, então vai virar uma proposta que a pessoa revisa, nunca uma
+automação que liga sozinha. O esquema é
 [`schemas/template.schema.json`](schemas/template.schema.json) e as regras estão
 em [`scripts/lib/template-rules.mjs`](scripts/lib/template-rules.mjs).
 
@@ -120,7 +121,8 @@ em [`scripts/lib/template-rules.mjs`](scripts/lib/template-rules.mjs).
   `limits`). Os tipos de gatilho e de passo, os campos de cada um e os nomes de
   ação são os que o hub conhece; ação que o motor não executa é recusada, porque
   o hub recusaria a execução inteira.
-- `voice_agent` fica em branco: quem instala escolhe a voz.
+- `voice_agent` fica em branco de propósito. O hub recusa voz em branco quando
+  confere uma definição, então preenche a voz de quem instala antes de conferir.
 - `package.agents`: cópia de cada agente que um passo de modelo cita (`slug`,
   `name`, `when_to_use`, `instructions`, `model`). A importação oferece como
   rascunho os que a Organização não tem.
@@ -129,10 +131,20 @@ em [`scripts/lib/template-rules.mjs`](scripts/lib/template-rules.mjs).
   para quem lê o modelo.
 - `package.automation.id` é o `id` do item, ou fica de fora.
 
-Toda ação que escreve fora do app (GitHub, Teams, Slack, chamada http) vem em
-`mode: "approve"`: o hub rebaixa `auto` para `approve` nessas, então um modelo
-que diz `auto` prometeria o que não faz. Só ação que lê ou fica no app
-(`github.checks_wait`, `desktop.notify`) roda em `auto`.
+O `mode` de um passo de ação é `draft`, `approve`, `auto` ou `never`, e
+`draft`, `approve` e `never` são aceitos em qualquer ação. `auto` só é aceito
+em ação que lê ou fica no app (`github.checks_wait`, `digest.deliver`,
+`desktop.notify`, `run.continue`). É recusado:
+
+- em toda ação que escreve fora do app (GitHub, Teams, Slack, chamada http) e em
+  `mcp.call`, que conta como escrita: o hub rebaixa `auto` para `approve` nessas,
+  então um modelo que diz `auto` prometeria o que não faz;
+- em `memory.propose` e `context.update`, que o contrato deixa atrás de
+  aprovação.
+
+O mesmo vale para `write_tools` de um passo de modelo: ferramenta que escreve
+vem em `approve`. `context.update` e `slack.thread-summary` são recusadas em
+qualquer modo, porque o motor não as executa.
 
 O que um modelo nunca leva, e a esteira recusa apontando o campo:
 

@@ -112,8 +112,9 @@ A template is an automation someone else can install. The file is
 `id`, `version`, `name` and `description` in `en` and `pt-BR`, `tags`) and the
 body in `package`: the automation package the hub exports with
 `GET /api/automations/{id}/package`, format `automation-package`, version 1.
-Installing it goes through the same import, so it becomes a proposal the person
-reviews, never an automation that turns on by itself. The schema is
+Once the hub's install from the catalog lands, installing it will go through
+the same import, so it will become a proposal the person reviews, never an
+automation that turns on by itself. The schema is
 [`schemas/template.schema.json`](schemas/template.schema.json) and the rules are
 in [`scripts/lib/template-rules.mjs`](scripts/lib/template-rules.mjs).
 
@@ -122,7 +123,9 @@ in [`scripts/lib/template-rules.mjs`](scripts/lib/template-rules.mjs).
   `limits`). Trigger and step kinds, their fields and the action names are the
   ones the hub knows; an action the engine does not run is refused, because the
   hub would refuse the whole run.
-- `voice_agent` stays blank: whoever installs picks the voice.
+- `voice_agent` stays blank on purpose. The hub refuses a blank voice when it
+  checks a definition, so it fills in the voice of whoever installs before it
+  checks.
 - `package.agents`: a copy of each agent a model step names (`slug`, `name`,
   `when_to_use`, `instructions`, `model`). The import offers the ones the
   Organization lacks as drafts.
@@ -131,10 +134,21 @@ in [`scripts/lib/template-rules.mjs`](scripts/lib/template-rules.mjs).
   does not read it; it tells the reader.
 - `package.automation.id` is the `id` of the item, or left out.
 
-Every action that writes outside the app (GitHub, Teams, Slack, an http call)
-comes in `mode: "approve"`: the hub lowers `auto` to `approve` on those, so a
-template that says `auto` would promise what it does not do. Only actions that
-read or stay in the app (`github.checks_wait`, `desktop.notify`) run in `auto`.
+The `mode` of an action step is `draft`, `approve`, `auto` or `never`, and
+`draft`, `approve` and `never` are accepted on any action. `auto` is accepted
+only on actions that read or stay in the app (`github.checks_wait`,
+`digest.deliver`, `desktop.notify`, `run.continue`). It is refused:
+
+- on every action that writes outside the app (GitHub, Teams, Slack, an http
+  call) and on `mcp.call`, which counts as writing: the hub lowers `auto` to
+  `approve` on those, so a template that says `auto` would promise what it does
+  not do;
+- on `memory.propose` and `context.update`, which the contract keeps behind an
+  approval.
+
+The same goes for `write_tools` of a model step: a tool that writes comes in
+`approve`. `context.update` and `slack.thread-summary` are refused in any mode,
+because the engine does not run them.
 
 What a template never carries, and the pipeline refuses with the field:
 
