@@ -1,8 +1,8 @@
 {
   "format": "app-marketplace-index",
   "version": 1,
-  "commit": "bf3e65fd8ce6175911058f20b129679c6041a319",
-  "committedAt": 1795471938,
+  "commit": "8db57d7011c2eaab34bf844eb4af435066751c51",
+  "committedAt": 1795475095,
   "items": [
     {
       "kind": "connection",
