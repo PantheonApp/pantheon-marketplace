@@ -1,14 +1,13 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join, relative } from "node:path";
-import { OFFICIAL_CONNECTIONS, TRIGGER_KINDS, canonicalHost } from "./rules.mjs";
+import { OFFICIAL_CONNECTIONS, canonicalHost } from "./rules.mjs";
 import { validateCatalog } from "./validate.mjs";
 import { endpointUrls, parseUrl, rustTrim } from "./connection-rules.mjs";
 
 /** The hub checks only that the format ends in -marketplace-index (catalog.rs, `entries`). */
 export const INDEX_FORMAT = "app-marketplace-index";
 export const INDEX_VERSION = 1;
-const KIND_ORDER = ["connection", "template", "package"];
 const FULL_SHA = /^[0-9a-f]{40}$/;
 /** What the hub reads at most (`MAX_ITEMS` and `MAX_INDEX_BYTES` in catalog.rs). */
 export const MAX_ENTRIES = 500;
@@ -36,21 +35,6 @@ function connectionRequires(manifest) {
   };
 }
 
-function packageRequires(pkg) {
-  const req = pkg.requisitos;
-  return {
-    connections: sorted(req.conexoes.map((c) => c.id)),
-    servers: sorted(req.servidores.map((s) => s.nome)),
-    providers: [...req.provedores]
-      .sort((a, b) => byCodeUnit(a.provedor, b.provedor))
-      .map((p) => ({ provider: p.provedor, models: sorted(p.modelos) })),
-    skills: sorted((req.skills ?? []).map((s) => s.nome)),
-    actions: sorted(pkg.automacao.spec.steps.filter((s) => s.type === "action").map((s) => s.action)),
-    // In the package order: what the person picks is what the kind leaves to them and the trigger does not bring.
-    triggers: pkg.automacao.gatilhos.map((g) => ({ kind: g.kind, choose: TRIGGER_KINDS.get(g.kind).chooses.filter((f) => g[f] === undefined) })),
-  };
-}
-
 /** retired.json of the catalog, keys sorted; an empty one when there is none. */
 function readRetired(root) {
   let value;
@@ -68,15 +52,15 @@ function readRetired(root) {
  * commit time in seconds: it orders indexes without a date that changes on every build, so the
  * same catalog and commit give the same bytes.
  */
-export async function buildIndex(root, { commit, committedAt, folders }) {
+export async function buildIndex(root, { commit, committedAt }) {
   if (typeof commit !== "string" || !FULL_SHA.test(commit)) throw new Error(`commit must be a full 40-character sha, found "${commit}"`);
   if (!Number.isSafeInteger(committedAt) || committedAt < 0) throw new Error(`committedAt must be the commit time in seconds, found "${committedAt}"`);
-  const { items, errors } = await validateCatalog(root, folders === undefined ? {} : { folders });
+  const { items, errors } = await validateCatalog(root);
   if (errors.length > 0) {
     throw new Error(`the catalog is invalid:\n${errors.map((e) => `${relative(root, e.file)}: ${e.field}: ${e.message}`).join("\n")}`);
   }
   const entries = items
-    .sort((a, b) => KIND_ORDER.indexOf(a.kind) - KIND_ORDER.indexOf(b.kind) || byCodeUnit(a.id, b.id))
+    .sort((a, b) => byCodeUnit(a.id, b.id))
     .map(({ kind, id, path, bytes, item }) => ({
       kind,
       id,
@@ -88,9 +72,9 @@ export async function buildIndex(root, { commit, committedAt, folders }) {
       name: item.name,
       description: item.description,
       tags: item.tags ?? [],
-      requires: kind === "connection" ? connectionRequires(item.manifest) : packageRequires(item.package),
+      requires: connectionRequires(item.manifest),
       // The mark comes from the maintainers' list, never from the item file; the hub trusts it because the index is signed.
-      ...(kind === "connection" && OFFICIAL_CONNECTIONS.has(id) ? { official: true } : {}),
+      ...(OFFICIAL_CONNECTIONS.has(id) ? { official: true } : {}),
     }));
   // The ids that left the catalog, signed with the rest so the next index can be checked against them. The hub reads
   // only the keys it knows of the index, so this one does not change what it accepts.

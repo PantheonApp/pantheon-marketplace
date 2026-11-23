@@ -11,8 +11,8 @@ with one click. Anyone can propose an item with a pull request.
   signs in (OAuth, token, CLI or none), which remote MCP server it talks to and
   what it unlocks. Today: GitHub.
 - `templates/` and `packages/`: they take no item yet, and the pipeline refuses
-  a file in them. Automation templates have their own plan and come later, in
-  the `locum-pacote` format, which is the one the hub converts.
+  a file in them. Today the catalog takes only connection types; automation
+  templates and packages come later, with their own plan.
 
 Each item is a JSON file at `<folder>/<id>.json`. The schemas are in
 [`schemas/`](schemas/), and [CONTRIBUTING.md](CONTRIBUTING.md) explains every

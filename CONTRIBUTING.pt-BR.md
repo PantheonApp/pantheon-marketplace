@@ -105,5 +105,6 @@ próprio hub, não do catálogo.
 
 ## Templates e pacotes
 
-Ainda não recebemos: a esteira recusa arquivo em `templates/` e `packages/`.
-Os modelos de automação chegam com plano próprio, no formato `locum-pacote`.
+Ainda não recebemos: hoje o catálogo recebe só tipos de conexão, e a esteira
+recusa arquivo em `templates/` e `packages/`. Modelos de automação e pacotes
+chegam depois, com plano próprio.

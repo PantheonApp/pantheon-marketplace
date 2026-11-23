@@ -107,5 +107,6 @@ a connection the organization creates on its own hub, not to the catalog.
 
 ## Templates and packages
 
-Not accepted yet: the pipeline refuses a file in `templates/` and `packages/`.
-Automation templates come with their own plan, in the `locum-pacote` format.
+Not accepted yet: today the catalog takes only connection types, and the
+pipeline refuses a file in `templates/` and `packages/`. Automation templates
+and packages come later, with their own plan.

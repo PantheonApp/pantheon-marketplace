@@ -3,24 +3,20 @@ import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import Ajv2020Module from "ajv/dist/2020.js";
 import { FOLDERS, OPEN_FOLDERS } from "./folders.mjs";
-import { OFFICIAL_CONNECTIONS, RESERVED_CONNECTION_IDS, TRIGGER_ANNOTATIONS, connectionClaims, itemRules, officialClaims } from "./rules.mjs";
+import { OFFICIAL_CONNECTIONS, RESERVED_CONNECTION_IDS, connectionClaims, itemRules, officialClaims } from "./rules.mjs";
 
 const Ajv2020 = Ajv2020Module.default ?? Ajv2020Module;
 const schemasDir = fileURLToPath(new URL("../../schemas/", import.meta.url));
 
-export { FOLDERS, OPEN_FOLDERS };
-
 /** The most the hub reads of one item file (`MAX_ITEM_BYTES` in catalog.rs). */
 export const MAX_ITEM_BYTES = 256 * 1024;
-const SCHEMA_OF_KIND = { connection: "connection", template: "template", package: "package" };
 
 let compiled;
 async function schemas() {
   if (compiled !== undefined) return compiled;
   const ajv = new Ajv2020({ allErrors: true, strict: true, strictTypes: false, strictRequired: false });
-  ajv.addVocabulary(TRIGGER_ANNOTATIONS);
   const byName = {};
-  for (const name of ["envelope", "connection", "template", "package"]) {
+  for (const name of ["envelope", "connection"]) {
     const schema = JSON.parse(await readFile(join(schemasDir, `${name}.schema.json`), "utf8"));
     ajv.addSchema(schema);
     byName[name] = schema.$id;
@@ -50,7 +46,6 @@ function schemaErrors(validate) {
       if (e.keyword === "oneOf" && /^manifest\.tools\.\d+$/.test(at)) return { field: at, message: "a tool is a name, or an object with a name and, when present, read_only true or false" };
       if (e.keyword === "oneOf" && /^manifest\.scope_keys\.\d+$/.test(at)) return { field: at, message: "a scope key is a name, or an object with a description in pt-BR and en" };
       if (e.keyword === "oneOf" && /^manifest\.(triggers|actions)\.\d+$/.test(at)) return { field: at, message: "is a name, or an object whose label and description come in pt-BR and en" };
-      if (at === "minAppVersion" && (e.keyword === "pattern" || e.keyword === "type")) return { field: at, message: "must be a version x.y.z, numbers only, like 0.2.0" };
       if (e.keyword === "enum") return { field: at, message: `must be one of ${e.params.allowedValues.map((v) => JSON.stringify(v)).join(", ")}` };
       return { field: at, message: e.message };
     });
@@ -168,8 +163,7 @@ export async function checkFile(file) {
   const item = parsed.item;
   const expected = expectedFromPath(file);
   const all = await schemas();
-  const kind = typeof item?.kind === "string" && SCHEMA_OF_KIND[item.kind] !== undefined ? item.kind : undefined;
-  const validate = all[kind === undefined ? "envelope" : SCHEMA_OF_KIND[kind]];
+  const validate = all[item?.kind === "connection" ? "connection" : "envelope"];
   validate(item);
   const ruled = itemRules(item, expected);
   // A rule says more than the schema about the same field: keep the rule.
@@ -179,15 +173,15 @@ export async function checkFile(file) {
   return { bytes, item, errors };
 }
 
-export async function validateFile(file, options) {
-  return (await checkFile(file, options)).errors;
+export async function validateFile(file) {
+  return (await checkFile(file)).errors;
 }
 
 /**
- * Every item in the catalog folders under root, with its bytes, and every error, ids unique across kinds and
- * what identifies a connection type claimed by one type only. A file in a folder outside `folders` is an error.
+ * Every item in the catalog folders under root, with its bytes, and every error, ids unique and what identifies a
+ * connection type claimed by one type only. A file in a folder the catalog does not take yet is an error.
  */
-export async function validateCatalog(root, { folders = OPEN_FOLDERS } = {}) {
+export async function validateCatalog(root) {
   const items = [];
   const errors = [];
   const owners = new Map();
@@ -201,7 +195,7 @@ export async function validateCatalog(root, { folders = OPEN_FOLDERS } = {}) {
     for (const name of names) {
       if (name === ".gitkeep") continue;
       const file = join(root, folder, name);
-      if (!folders.includes(folder)) {
+      if (!OPEN_FOLDERS.includes(folder)) {
         errors.push({ file, field: "", message: `${folder}/ is not accepted yet: it opens with its own plan` });
         continue;
       }

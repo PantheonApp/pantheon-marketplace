@@ -2,12 +2,12 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://raw.githubusercontent.com/PantheonApp/pantheon-marketplace/main/schemas/envelope.schema.json",
   "title": "Marketplace item",
-  "description": "The envelope every item shares. The body is `manifest` for a connection and `package` for a template or a package; the schema of each kind says which.",
+  "description": "The envelope every item shares. The body is `manifest`, and the schema of the kind says what it holds.",
   "type": "object",
   "required": ["kind", "id", "version", "name", "description"],
   "additionalProperties": false,
   "properties": {
-    "kind": { "enum": ["connection", "template", "package"] },
+    "kind": { "enum": ["connection"] },
     "id": {
       "description": "Kebab-case, equal to the file name without .json, unique in the catalog.",
       "type": "string",
@@ -29,8 +29,7 @@
     },
     "minAppVersion": true,
     "min_app_version": true,
-    "manifest": true,
-    "package": true
+    "manifest": true
   },
   "$defs": {
     "localizedName": {
