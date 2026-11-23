@@ -19,10 +19,10 @@
     "version": 1,
     "automation": {
       "id": "responder-thread-de-review",
-      "name": "Responder em thread de review",
+      "name": "Reply in review threads",
       "definition": {
         "schema_version": 18,
-        "name": "Responder em thread de review",
+        "name": "Reply in review threads",
         "description": "Quando alguém responde numa thread de review que você abriu: avalia a resposta, deixa a réplica na fila para a sua aprovação e, quando o pedido foi corrigido ou a explicação se sustenta, propõe resolver a thread.",
         "voice_agent": "",
         "triggers": [
@@ -40,7 +40,7 @@
             "kind": "model",
             "max_turns": 8,
             "model": "opus",
-            "name": "Avaliar a resposta",
+            "name": "Judge the reply",
             "needs": [],
             "optional": false,
             "output_schema": {
@@ -71,7 +71,7 @@
             "key": "responder",
             "kind": "action",
             "mode": "approve",
-            "name": "Responder na thread",
+            "name": "Reply in the thread",
             "needs": [
               "avaliar"
             ],
@@ -88,7 +88,7 @@
             "compare": "matches",
             "key": "resolve",
             "kind": "logic",
-            "name": "Resolve a thread?",
+            "name": "Resolve the thread?",
             "needs": [
               "avaliar"
             ],
@@ -101,7 +101,7 @@
             "key": "resolver",
             "kind": "action",
             "mode": "approve",
-            "name": "Resolver a thread",
+            "name": "Resolve the thread",
             "needs": [
               "resolve",
               "responder"

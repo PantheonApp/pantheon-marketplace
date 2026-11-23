@@ -7,7 +7,7 @@
     "pt-BR": "Revisar PRs pelo Teams"
   },
   "description": {
-    "en": "Reviews a pull request when its link is posted in a Teams channel or chat, and again when the author pushes after your review asked for changes or commented. Waits for CI and turns an approval into a comment when CI is not green. Reacts on the message with the verdict and posts a summary in the thread when verdicts differ. Every action that writes outside waits for your approval. You pick the chats, channels and GitHub owner when installing.",
+    "en": "Reviews a pull request when its link is posted in a Teams channel or chat, and again when the author pushes after your review asked for changes or commented. Waits for CI and turns an approval into a comment when CI is not green. Reacts to the message with the verdict and posts a summary in the thread when verdicts differ. Every action that writes outside waits for your approval. You pick the chats, channels and GitHub owner when installing.",
     "pt-BR": "Revisa o pull request quando o link aparece num canal ou chat do Teams, e de novo quando o autor sobe commit depois de uma review sua que pediu mudança ou comentou. Espera a esteira e transforma a aprovação em comentário quando ela não está verde. Reage na mensagem com o veredito e posta um resumo na thread quando os vereditos diferem. Toda ação que escreve fora espera a sua aprovação. Os chats, os canais e o dono no GitHub você escolhe ao instalar."
   },
   "tags": [
@@ -20,10 +20,10 @@
     "version": 1,
     "automation": {
       "id": "revisar-prs-teams",
-      "name": "Revisar PRs pelo Teams",
+      "name": "Review PRs from Teams",
       "definition": {
         "schema_version": 18,
-        "name": "Revisar PRs pelo Teams",
+        "name": "Review PRs from Teams",
         "description": "Revisa o pull request quando alguém posta o link num canal ou chat do Teams, e de novo quando o autor sobe commit depois de uma review sua que pediu mudança ou comentou. Espera a esteira e transforma a aprovação em comentário quando ela não está verde. Reage na mensagem com o veredito e, quando os vereditos diferem, posta um resumo na thread. Toda ação que escreve fora espera a sua aprovação.",
         "voice_agent": "",
         "triggers": [
@@ -70,34 +70,11 @@
         ],
         "steps": [
           {
-            "action": "teams.react",
-            "key": "pegou",
-            "kind": "action",
-            "mode": "approve",
-            "name": "Reagir 👀",
-            "needs": [],
-            "optional": true,
-            "params": {
-              "alvo": "origem-do-pr",
-              "emoji": "👀",
-              "operacao": "set",
-              "tirar": [
-                "✅",
-                "⚠️",
-                "💬",
-                "🧵",
-                "❌"
-              ]
-            },
-            "pending_policy": "replace",
-            "target": ""
-          },
-          {
             "action": "github.checks_wait",
             "key": "esteira",
             "kind": "action",
             "mode": "auto",
-            "name": "Esperar a esteira",
+            "name": "Wait for CI",
             "needs": [],
             "optional": false,
             "params": {
@@ -115,7 +92,7 @@
             "kind": "model",
             "max_turns": 25,
             "model": "opus",
-            "name": "Revisar o PR",
+            "name": "Review the PR",
             "needs": [],
             "optional": false,
             "output_schema": {
@@ -187,7 +164,10 @@
               "type": "object"
             },
             "prompt": "Revise o pull request {{event.repo}}#{{event.pull}}.\nProcure defeito real no diff abaixo, não estilo nem preferência.\n\nEm `verdict`: APPROVE se não há defeito a corrigir, REQUEST_CHANGES se há defeito que precisa ser corrigido antes do merge, COMMENT se só há observações.\n\nEm `findings`, cada defeito com arquivo e linha do diff (lado novo) quando der, severidade, o problema com a prova em uma ou duas frases e a correção em uma frase. Sem defeito, lista vazia.\n\nEm `summary`, o corpo da review no GitHub. Com APPROVE e findings vazio, escreva exatamente LGTM e nada mais. Nos outros casos, no máximo duas frases dizendo o que precisa mudar ou o que vale olhar. Não resuma o PR, não liste o que conferiu, não elogie, não abra com introdução.\n\nSegunda passada: se \"Sua review anterior\" abaixo não estiver vazia, este PR já foi revisado por você e recebeu commits depois. Confira ponto a ponto se o que você apontou foi resolvido, pelo diff desde a sua review e pelas conversas da review. Ponto não resolvido volta como finding. Tudo resolvido e nada de novo com defeito no diff desde a review: APPROVE. Não repita ponto já resolvido nem comente o que não mudou.\n\nSua review anterior:\n{{event.myLastReview}}\n\nConversas da review:\n{{event.reviewThreadsText}}\n\nDiff desde a sua review:\n{{event.diffSinceMyReview}}\n\nDe: {{event.author}}\n\nMensagem do Teams (vazia quando a revisão veio de commit novo):\n{{event.text}}\n\nTítulo: {{event.title}}\n\nDescrição:\n{{event.description}}\n\nDiff:\n{{event.diff}}",
-            "agent": "pr-review"
+            "agent": "pr-review",
+            "tools": [
+              "github__get_file_contents"
+            ]
           },
           {
             "against": "^$",
@@ -195,7 +175,7 @@
             "compare": "matches",
             "key": "origem",
             "kind": "logic",
-            "name": "Canal ou commit novo?",
+            "name": "Channel or new commit?",
             "needs": [
               "revisar"
             ],
@@ -208,7 +188,7 @@
             "key": "publicar",
             "kind": "action",
             "mode": "approve",
-            "name": "Publicar review no GitHub",
+            "name": "Publish the review on GitHub",
             "needs": [
               "revisar",
               "esteira",
@@ -238,7 +218,7 @@
             "key": "publicar_fila",
             "kind": "action",
             "mode": "approve",
-            "name": "Publicar review no GitHub (fila)",
+            "name": "Publish the review on GitHub (queue)",
             "needs": [
               "revisar",
               "esteira",
@@ -269,7 +249,7 @@
             "key": "veredito",
             "kind": "action",
             "mode": "approve",
-            "name": "Reagir pelo veredito",
+            "name": "React with the verdict",
             "needs": [
               "publicar"
             ],
@@ -313,7 +293,7 @@
             "key": "veredito_fila",
             "kind": "action",
             "mode": "approve",
-            "name": "Reagir pelo veredito (fila)",
+            "name": "React with the verdict (queue)",
             "needs": [
               "publicar_fila"
             ],
@@ -357,7 +337,7 @@
             "key": "resumo",
             "kind": "action",
             "mode": "approve",
-            "name": "Resumo na thread",
+            "name": "Summary in the thread",
             "needs": [
               "veredito"
             ],
@@ -395,7 +375,7 @@
             "key": "resumo_fila",
             "kind": "action",
             "mode": "approve",
-            "name": "Resumo na thread (fila)",
+            "name": "Summary in the thread (queue)",
             "needs": [
               "veredito_fila"
             ],
@@ -451,7 +431,9 @@
       }
     ],
     "requirements": {
-      "connections": [],
+      "connections": [
+        "github"
+      ],
       "apps": [
         "github",
         "teams"

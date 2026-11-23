@@ -19,11 +19,11 @@
     "version": 1,
     "automation": {
       "id": "alertas-do-canal",
-      "name": "Alertas do canal",
+      "name": "Channel alerts",
       "definition": {
         "schema_version": 18,
-        "name": "Alertas do canal",
-        "description": "Observa os alertas de um canal do Teams e avisa nesta máquina, em poucas linhas, o que precisa de atenção.",
+        "name": "Channel alerts",
+        "description": "Observa os alertas dos canais do Teams que você escolher e avisa nesta máquina, em poucas linhas, o que precisa de atenção.",
         "voice_agent": "",
         "triggers": [
           {
@@ -42,7 +42,7 @@
         "steps": [
           {
             "key": "resumir",
-            "name": "Resumir o alerta",
+            "name": "Summarize the alert",
             "kind": "model",
             "model": "haiku",
             "max_turns": 4,
@@ -78,7 +78,7 @@
           },
           {
             "key": "avisar",
-            "name": "Avisar nesta máquina",
+            "name": "Notify on this machine",
             "kind": "action",
             "action": "desktop.notify",
             "mode": "auto",
