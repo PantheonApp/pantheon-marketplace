@@ -1,6 +1,7 @@
 {
-  "name": "a voice agent of whoever exported",
+  "name": "a Teams chat id in a param (catalog convention, the hub accepts it)",
   "accept": false,
+  "hub_accepts": true,
   "item": {
     "kind": "template",
     "id": "example",
@@ -25,7 +26,7 @@
         "definition": {
           "schema_version": 18,
           "name": "Example",
-          "voice_agent": "my-voice",
+          "voice_agent": "",
           "triggers": [
             {
               "kind": "manual"
@@ -62,6 +63,19 @@
               "params": {
                 "title": "Example",
                 "body": "{{steps.summary.text}}"
+              }
+            },
+            {
+              "key": "post",
+              "kind": "action",
+              "action": "teams.post",
+              "mode": "approve",
+              "needs": [
+                "summary"
+              ],
+              "params": {
+                "text": "x",
+                "chat": "19:abcdef0123456789@thread.v2"
               }
             }
           ]

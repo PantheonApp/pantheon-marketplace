@@ -1,6 +1,7 @@
 {
-  "name": "a Teams chat id",
+  "name": "a token in a prompt (catalog convention, the hub accepts it)",
   "accept": false,
+  "hub_accepts": true,
   "item": {
     "kind": "template",
     "id": "example",
@@ -37,7 +38,7 @@
               "name": "Summarize",
               "kind": "model",
               "agent": "writer",
-              "prompt": "Summarize the day.",
+              "prompt": "Use ghp_abcdefghijklmnopqrstuvwxyz0123456789 to read.",
               "output_schema": {
                 "type": "object",
                 "required": [
@@ -62,19 +63,6 @@
               "params": {
                 "title": "Example",
                 "body": "{{steps.summary.text}}"
-              }
-            },
-            {
-              "key": "post",
-              "kind": "action",
-              "action": "teams.post",
-              "mode": "approve",
-              "needs": [
-                "summary"
-              ],
-              "params": {
-                "text": "x",
-                "chat": "19:abcdef0123456789@thread.v2"
               }
             }
           ]

@@ -1,6 +1,7 @@
 {
-  "name": "the id of the automation in the hub that exported it",
+  "name": "the id of the automation in the hub that exported it (catalog convention, the hub accepts it)",
   "accept": false,
+  "hub_accepts": true,
   "item": {
     "kind": "template",
     "id": "example",

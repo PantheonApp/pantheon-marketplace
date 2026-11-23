@@ -1,6 +1,7 @@
 {
-  "name": "an internal address",
+  "name": "an id in UUID form in a text (catalog convention, the hub accepts it)",
   "accept": false,
+  "hub_accepts": true,
   "item": {
     "kind": "template",
     "id": "example",
@@ -37,7 +38,7 @@
               "name": "Summarize",
               "kind": "model",
               "agent": "writer",
-              "prompt": "Read http://10.0.0.5/status first.",
+              "prompt": "Summarize the day.",
               "output_schema": {
                 "type": "object",
                 "required": [
@@ -72,7 +73,7 @@
           "slug": "writer",
           "name": "Writer",
           "when_to_use": "To write summaries.",
-          "instructions": "Write short summaries.",
+          "instructions": "Ask 3f2b8c1e-9a4d-4e7f-8b21-6c0d9e5a7f13 first.",
           "model": "haiku",
           "tools": [],
           "kind": "specialist",

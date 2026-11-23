@@ -1,5 +1,6 @@
 // The same as hub-parity.test.mjs, for templates: each file in test/fixtures/hub-parity-templates is
 // `{ name, accept, item | raw | base64 }`, written as templates/example.json, for the hub to run the same cases.
+// `accept` is this catalog's answer; `hub_accepts` marks the cases where the catalog is stricter than the hub on purpose.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs";

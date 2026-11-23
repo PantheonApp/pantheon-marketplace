@@ -1,6 +1,7 @@
 {
-  "name": "an id in UUID form",
+  "name": "a Slack id in a param (catalog convention, the hub accepts it)",
   "accept": false,
+  "hub_accepts": true,
   "item": {
     "kind": "template",
     "id": "example",
@@ -61,7 +62,8 @@
               ],
               "params": {
                 "title": "Example",
-                "body": "{{steps.summary.text}}"
+                "body": "{{steps.summary.text}}",
+                "user": "U01ABCDEF2"
               }
             }
           ]
@@ -72,7 +74,7 @@
           "slug": "writer",
           "name": "Writer",
           "when_to_use": "To write summaries.",
-          "instructions": "Ask 3f2b8c1e-9a4d-4e7f-8b21-6c0d9e5a7f13 first.",
+          "instructions": "Write short summaries.",
           "model": "haiku",
           "tools": [],
           "kind": "specialist",
