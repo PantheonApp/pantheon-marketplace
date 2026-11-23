@@ -1,9 +1,28 @@
 {
   "format": "app-marketplace-index",
   "version": 1,
-  "commit": "8db57d7011c2eaab34bf844eb4af435066751c51",
-  "committedAt": 1795475095,
+  "commit": "2900f117c6fed6e294c9c75a2eecb6b9261f3447",
+  "committedAt": 1795477797,
   "items": [
+    {
+      "kind": "template",
+      "id": "alertas-do-canal",
+      "version": 1,
+      "path": "templates/alertas-do-canal.json",
+      "sha256": "f9ff5d0a28581fdce42bd49fddff387ad77500643bc20cb499ac023d28de3394",
+      "name": {
+        "en": "Channel alerts",
+        "pt-BR": "Alertas do canal"
+      },
+      "description": {
+        "en": "Watches the alerts posted in Teams channels you pick and tells you on this machine, in a few lines, what needs attention. A cheap model filters routine notices and alerts that already recovered. Nothing is written outside: the summary is a local notification. You pick the channels when installing.",
+        "pt-BR": "Observa os alertas postados nos canais do Teams que você escolher e avisa nesta máquina, em poucas linhas, o que precisa de atenção. Um modelo barato descarta aviso de rotina e alerta que já se resolveu. Nada é escrito fora: o resumo é uma notificação local. Os canais você escolhe ao instalar."
+      },
+      "tags": [
+        "alerts",
+        "teams"
+      ]
+    },
     {
       "kind": "connection",
       "id": "github",
@@ -41,6 +60,45 @@
         "actions": []
       },
       "official": true
+    },
+    {
+      "kind": "template",
+      "id": "responder-thread-de-review",
+      "version": 1,
+      "path": "templates/responder-thread-de-review.json",
+      "sha256": "d21cf7f85298cf0fb14b9e67ec1e339be8a64094dd09d7e8112c0e7d0292f4fd",
+      "name": {
+        "en": "Reply in review threads",
+        "pt-BR": "Responder em thread de review"
+      },
+      "description": {
+        "en": "When someone replies in a GitHub review thread you opened, judges the reply against the current code: fixed, accepted, still valid or a question. Queues the answer in the thread for your approval and, when the request was fixed or the explanation holds, proposes resolving the thread, also for your approval. You pick the GitHub owner when installing.",
+        "pt-BR": "Quando alguém responde numa thread de review do GitHub que você abriu, avalia a resposta contra o código de agora: corrigido, aceito, ainda vale ou pergunta. Deixa a réplica na thread na fila para a sua aprovação e, quando o pedido foi corrigido ou a explicação se sustenta, propõe resolver a thread, também com a sua aprovação. O dono no GitHub você escolhe ao instalar."
+      },
+      "tags": [
+        "code-review",
+        "github"
+      ]
+    },
+    {
+      "kind": "template",
+      "id": "revisar-prs-teams",
+      "version": 1,
+      "path": "templates/revisar-prs-teams.json",
+      "sha256": "bd6ca74c31dddb47f6b3849c66196ab6fe06980e8d91b62e7cf17a7fd9f8abe0",
+      "name": {
+        "en": "Review PRs from Teams",
+        "pt-BR": "Revisar PRs pelo Teams"
+      },
+      "description": {
+        "en": "Reviews a pull request when its link is posted in a Teams channel or chat, and again when the author pushes after your review asked for changes or commented. Waits for CI and turns an approval into a comment when CI is not green. Reacts to the message with the verdict and posts a summary in the thread when verdicts differ. Every action that writes outside waits for your approval. You pick the chats, channels and GitHub owner when installing.",
+        "pt-BR": "Revisa o pull request quando o link aparece num canal ou chat do Teams, e de novo quando o autor sobe commit depois de uma review sua que pediu mudança ou comentou. Espera a esteira e transforma a aprovação em comentário quando ela não está verde. Reage na mensagem com o veredito e posta um resumo na thread quando os vereditos diferem. Toda ação que escreve fora espera a sua aprovação. Os chats, os canais e o dono no GitHub você escolhe ao instalar."
+      },
+      "tags": [
+        "code-review",
+        "github",
+        "teams"
+      ]
     }
   ],
   "retired": {}
