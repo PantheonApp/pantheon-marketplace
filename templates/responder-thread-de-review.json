@@ -1,0 +1,144 @@
+{
+  "kind": "template",
+  "id": "responder-thread-de-review",
+  "version": 1,
+  "name": {
+    "en": "Reply in review threads",
+    "pt-BR": "Responder em thread de review"
+  },
+  "description": {
+    "en": "When someone replies in a GitHub review thread you opened, judges the reply against the current code: fixed, accepted, still valid or a question. Queues the answer in the thread for your approval and, when the request was fixed or the explanation holds, proposes resolving the thread, also for your approval. You pick the GitHub owner when installing.",
+    "pt-BR": "Quando alguém responde numa thread de review do GitHub que você abriu, avalia a resposta contra o código de agora: corrigido, aceito, ainda vale ou pergunta. Deixa a réplica na thread na fila para a sua aprovação e, quando o pedido foi corrigido ou a explicação se sustenta, propõe resolver a thread, também com a sua aprovação. O dono no GitHub você escolhe ao instalar."
+  },
+  "tags": [
+    "code-review",
+    "github"
+  ],
+  "package": {
+    "format": "automation-package",
+    "version": 1,
+    "automation": {
+      "id": "responder-thread-de-review",
+      "name": "Responder em thread de review",
+      "definition": {
+        "schema_version": 18,
+        "name": "Responder em thread de review",
+        "description": "Quando alguém responde numa thread de review que você abriu: avalia a resposta, deixa a réplica na fila para a sua aprovação e, quando o pedido foi corrigido ou a explicação se sustenta, propõe resolver a thread.",
+        "voice_agent": "",
+        "triggers": [
+          {
+            "excerpt_lines": 20,
+            "kind": "github_thread_reply",
+            "lookback_minutes": 60,
+            "max_replies_per_pr": 10,
+            "max_replies_per_thread": 3
+          }
+        ],
+        "steps": [
+          {
+            "key": "avaliar",
+            "kind": "model",
+            "max_turns": 8,
+            "model": "opus",
+            "name": "Avaliar a resposta",
+            "needs": [],
+            "optional": false,
+            "output_schema": {
+              "additionalProperties": false,
+              "properties": {
+                "body": {
+                  "type": "string"
+                },
+                "outcome": {
+                  "enum": [
+                    "fixed",
+                    "accepted",
+                    "still-valid",
+                    "question"
+                  ]
+                }
+              },
+              "required": [
+                "outcome",
+                "body"
+              ],
+              "type": "object"
+            },
+            "prompt": "Você publicou um comentário de review neste pull request, e outra pessoa respondeu na thread. Leia a thread inteira, o trecho do diff e a resposta nova, e decida o desfecho:\n- fixed: o código de agora mostra que o pedido foi corrigido. Antes de aceitar um \"corrigi\", confira o trecho e se o arquivo mudou desde o seu comentário. Com o trecho do commit de agora ainda com o problema, não é fixed. Quando o trecho é do commit do comentário (a thread perdeu a linha), ele mostra o código de antes da correção: decida pelo diff desde o comentário, que precisa mostrar o problema corrigido. Com o arquivo sem mudança, a correção precisaria estar em outro lugar que você consiga conferir.\n- accepted: a explicação se sustenta e o pedido não se aplica; você consegue conferir o argumento.\n- still-valid: o pedido continua valendo; diga por quê, com evidência.\n- question: a pessoa fez uma pergunta ou falta informação para decidir.\nResposta que só promete corrigir depois não é fixed. Se o trecho atual não pôde ser lido (o motivo aparece em \"Leituras que falharam\"), não marque fixed só pela palavra da pessoa: diga o que não deu para conferir.\n\nSaída:\n- outcome: fixed, accepted, still-valid ou question.\n- body: a resposta na thread, curta e objetiva, em Markdown. Em question, responda a pergunta ou diga o que falta.\n\nRepositório: {{event.repo}}\nPull request: {{event.title}} ({{event.url}})\nArquivo: {{event.path}}, linha {{event.line}}\n\nTrecho do diff, de quando você comentou:\n{{event.diffHunk}}\n\nO arquivo mudou desde o seu comentário (null quando não deu para conferir): {{event.changedSinceComment}}\nDiff do arquivo desde o comentário (null quando não mudou; origem: {{event.diffSinceCommentSource}}):\n{{event.diffSinceComment}}\n\nTrecho do arquivo no commit {{event.currentExcerptCommit}} (o de agora é {{event.headSha}}; quando a thread perdeu a linha, o trecho é do commit do comentário), com o número de cada linha e a linha da thread marcada com > (null quando o arquivo não existe mais ou não pôde ser lido):\n{{event.currentExcerpt}}\n\nLinha de quando você comentou e linha de agora, quando andou (null quando não andou): {{event.lineMoved}}\nLeituras que falharam (null quando tudo foi lido): {{event.threadContextErrors}}\n\nThread:\n{{event.threadText}}\n\nResposta nova, de {{event.commentAuthor}}:\n{{event.commentBody}}"
+          },
+          {
+            "action": "github.review_reply",
+            "key": "responder",
+            "kind": "action",
+            "mode": "approve",
+            "name": "Responder na thread",
+            "needs": [
+              "avaliar"
+            ],
+            "optional": false,
+            "params": {
+              "body": "{{steps.avaliar.body}}"
+            },
+            "pending_policy": "replace",
+            "target": ""
+          },
+          {
+            "against": "^(fixed|accepted)$",
+            "cases": [],
+            "compare": "matches",
+            "key": "resolve",
+            "kind": "logic",
+            "name": "Resolve a thread?",
+            "needs": [
+              "avaliar"
+            ],
+            "op": "if",
+            "optional": false,
+            "value": "{{steps.avaliar.outcome}}"
+          },
+          {
+            "action": "github.resolve_thread",
+            "key": "resolver",
+            "kind": "action",
+            "mode": "approve",
+            "name": "Resolver a thread",
+            "needs": [
+              "resolve",
+              "responder"
+            ],
+            "optional": false,
+            "params": {},
+            "pending_policy": "replace",
+            "target": "",
+            "when": {
+              "branch": "true",
+              "step": "resolve"
+            }
+          }
+        ],
+        "limits": {
+          "max_minutes": 1440,
+          "max_reruns_per_subject": 50,
+          "on_limit": "pause",
+          "per_day_micros": 3000000,
+          "per_run_micros": 200000
+        }
+      }
+    },
+    "agents": [],
+    "requirements": {
+      "connections": [],
+      "apps": [
+        "github"
+      ],
+      "servers": [],
+      "agents": [],
+      "to_fill": [
+        {
+          "path": "triggers[0]",
+          "field": "owner"
+        }
+      ]
+    }
+  }
+}

@@ -16,7 +16,7 @@ reviewer of the pull request checks it.
 
 ## Rules for every item
 
-- The file is `connections/<id>.json`, and the `id` equals the file name, in
+- The file is `connections/<id>.json` or `templates/<id>.json`, and the `id` equals the file name, in
   kebab-case (`a-z`, `0-9` and hyphen).
 - `version` is an integer from 1, written without a point (`1`, not `1.0`),
   and goes up on every change to the item. It never goes below the published
@@ -105,8 +105,57 @@ convention, stricter than the hub, a host name is ASCII only and has no `xn--`
 holds for a type that runs only on the Mac too: an internal network belongs to
 a connection the organization creates on its own hub, not to the catalog.
 
-## Templates and packages
+## Automation template
 
-Not accepted yet: today the catalog takes only connection types, and the
-pipeline refuses a file in `templates/` and `packages/`. Automation templates
-and packages come later, with their own plan.
+A template is an automation someone else can install. The file is
+`templates/<id>.json`, with the envelope of every item (`kind: "template"`,
+`id`, `version`, `name` and `description` in `en` and `pt-BR`, `tags`) and the
+body in `package`: the automation package the hub exports with
+`GET /api/automations/{id}/package`, format `automation-package`, version 1.
+Installing it goes through the same import, so it becomes a proposal the person
+reviews, never an automation that turns on by itself. The schema is
+[`schemas/template.schema.json`](schemas/template.schema.json) and the rules are
+in [`scripts/lib/template-rules.mjs`](scripts/lib/template-rules.mjs).
+
+- `package.automation.definition`: the definition as the hub saves it
+  (`schema_version` up to 20, `name`, `description`, `triggers`, `steps`,
+  `limits`). Trigger and step kinds, their fields and the action names are the
+  ones the hub knows; an action the engine does not run is refused, because the
+  hub would refuse the whole run.
+- `voice_agent` stays blank: whoever installs picks the voice.
+- `package.agents`: a copy of each agent a model step names (`slug`, `name`,
+  `when_to_use`, `instructions`, `model`). The import offers the ones the
+  Organization lacks as drafts.
+- `package.requirements`: what the destination needs (apps, servers,
+  connections) and `to_fill`, the fields left for whoever installs. The import
+  does not read it; it tells the reader.
+- `package.automation.id` is the `id` of the item, or left out.
+
+Every action that writes outside the app (GitHub, Teams, Slack, an http call)
+comes in `mode: "approve"`: the hub lowers `auto` to `approve` on those, so a
+template that says `auto` would promise what it does not do. Only actions that
+read or stay in the app (`github.checks_wait`, `desktop.notify`) run in `auto`.
+
+What a template never carries, and the pipeline refuses with the field:
+
+- what belongs to whoever exported: the GitHub `owner`, `repo_match` and a list
+  of `repos`; the `chats`, `channels` and `account` of a Teams inbox; the
+  channels and the user of a Slack trigger; the `account` and the fixed
+  conversation of a Teams, Slack or MCP action;
+- a credential: a key in a header, in the login or the query of an address, in
+  a param named like one, or a token in any text. A marker (`{{...}}`) is filled
+  when it runs, so it passes;
+- a webhook address, which is a credential by itself;
+- an internal address: IP addresses, `localhost` and names of internal networks;
+- ids of people, Organizations, chats and channels: UUIDs, Teams chat ids, Slack
+  ids and e-mail addresses.
+
+The export of the hub already leaves the personal fields out; clean the rest
+before you open the pull request. The texts are generic: no name of a company,
+a person or another product. The cases the hub runs too are in
+`test/fixtures/hub-parity-templates/`.
+
+## Packages
+
+Not accepted yet: the pipeline refuses a file in `packages/`. Packages come
+later, with their own plan.

@@ -10,10 +10,10 @@ import { assertSourceText, validateCatalog, validateFile } from "../scripts/lib/
 const root = fileURLToPath(new URL("..", import.meta.url));
 const github = () => JSON.parse(readFileSync(join(root, "connections/github.json"), "utf8"));
 
-test("the catalog in the repository is valid: the connection types, and no template or package yet", async () => {
+test("the catalog in the repository is valid: the connection types and the templates, and no package yet", async () => {
   const { items, errors } = await validateCatalog(root);
   assert.deepEqual(errors, []);
-  assert.deepEqual(items.map((i) => `${i.kind}:${i.id}`), ["connection:github"]);
+  assert.deepEqual(items.map((i) => `${i.kind}:${i.id}`), ["connection:github", "template:alertas-do-canal", "template:responder-thread-de-review", "template:revisar-prs-teams"]);
 });
 
 test("the CLI with no arguments validates the whole catalog and exits zero", () => {

@@ -2,17 +2,20 @@
 
 [Português](README.pt-BR.md)
 
-The Pantheon catalog: the connection types an organization installs on its hub
-with one click. Anyone can propose an item with a pull request.
+The Pantheon catalog: the connection types and the automation templates an
+organization installs on its hub with one click. Anyone can propose an item with a pull request.
 
 ## What lives here
 
 - `connections/`: connection types. Each one says where it runs, how a person
   signs in (OAuth, token, CLI or none), which remote MCP server it talks to and
   what it unlocks. Today: GitHub.
-- `templates/` and `packages/`: they take no item yet, and the pipeline refuses
-  a file in them. Today the catalog takes only connection types; automation
-  templates and packages come later, with their own plan.
+- `templates/`: automation templates. Each one wraps the automation package the
+  hub exports (`automation-package`, version 1): the definition of the
+  automation and the agents its steps name. Installing one makes a proposal on
+  the hub, which the person reviews before saving. Today: review PRs from Teams,
+  reply in review threads, channel alerts.
+- `packages/`: takes no item yet, and the pipeline refuses a file in it.
 
 Each item is a JSON file at `<folder>/<id>.json`. The schemas are in
 [`schemas/`](schemas/), and [CONTRIBUTING.md](CONTRIBUTING.md) explains every

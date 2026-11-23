@@ -16,7 +16,7 @@ confere.
 
 ## Regras de todo item
 
-- O arquivo fica em `connections/<id>.json`, e o `id` é igual ao nome do
+- O arquivo fica em `connections/<id>.json` ou `templates/<id>.json`, e o `id` é igual ao nome do
   arquivo, em kebab-case (`a-z`, `0-9` e hífen).
 - `version` é um inteiro a partir de 1, escrito sem ponto (`1`, não `1.0`), e
   sobe a cada mudança no item. Nunca desce abaixo da versão já publicada, e a
@@ -103,8 +103,57 @@ do catálogo, mais estrita que o hub, o nome do host é só ASCII e sem rótulo
 roda só no Mac: rede interna é coisa da conexão que a organização cria no
 próprio hub, não do catálogo.
 
-## Templates e pacotes
+## Modelo de automação
 
-Ainda não recebemos: hoje o catálogo recebe só tipos de conexão, e a esteira
-recusa arquivo em `templates/` e `packages/`. Modelos de automação e pacotes
-chegam depois, com plano próprio.
+Um modelo é uma automação que outra pessoa pode instalar. O arquivo é
+`templates/<id>.json`, com o envelope de todo item (`kind: "template"`, `id`,
+`version`, `name` e `description` em `en` e `pt-BR`, `tags`) e o corpo em
+`package`: o pacote de automação que o hub exporta com
+`GET /api/automations/{id}/package`, formato `automation-package`, versão 1.
+Instalar passa pela mesma importação, então vira uma proposta que a pessoa
+revisa, nunca uma automação que liga sozinha. O esquema é
+[`schemas/template.schema.json`](schemas/template.schema.json) e as regras estão
+em [`scripts/lib/template-rules.mjs`](scripts/lib/template-rules.mjs).
+
+- `package.automation.definition`: a definição como o hub guarda
+  (`schema_version` até 20, `name`, `description`, `triggers`, `steps`,
+  `limits`). Os tipos de gatilho e de passo, os campos de cada um e os nomes de
+  ação são os que o hub conhece; ação que o motor não executa é recusada, porque
+  o hub recusaria a execução inteira.
+- `voice_agent` fica em branco: quem instala escolhe a voz.
+- `package.agents`: cópia de cada agente que um passo de modelo cita (`slug`,
+  `name`, `when_to_use`, `instructions`, `model`). A importação oferece como
+  rascunho os que a Organização não tem.
+- `package.requirements`: o que o destino precisa (apps, servidores, conexões) e
+  `to_fill`, os campos que ficam para quem instala. A importação não lê; serve
+  para quem lê o modelo.
+- `package.automation.id` é o `id` do item, ou fica de fora.
+
+Toda ação que escreve fora do app (GitHub, Teams, Slack, chamada http) vem em
+`mode: "approve"`: o hub rebaixa `auto` para `approve` nessas, então um modelo
+que diz `auto` prometeria o que não faz. Só ação que lê ou fica no app
+(`github.checks_wait`, `desktop.notify`) roda em `auto`.
+
+O que um modelo nunca leva, e a esteira recusa apontando o campo:
+
+- o que é de quem exportou: `owner`, `repo_match` e lista de `repos` do GitHub;
+  `chats`, `channels` e `account` da caixa do Teams; os canais e o usuário de um
+  gatilho do Slack; o `account` e a conversa fixa de uma ação do Teams, do Slack
+  ou de MCP;
+- credencial: chave em cabeçalho, no login ou na query de um endereço, em
+  parâmetro com nome de chave, ou token em qualquer texto. Marcador (`{{...}}`)
+  é preenchido na execução, então passa;
+- endereço de webhook, que já é uma credencial;
+- endereço interno: IP, `localhost` e nomes de rede interna;
+- id de pessoa, de Organização, de chat e de canal: UUID, id de chat do Teams,
+  id do Slack e e-mail.
+
+O export do hub já tira os campos pessoais; limpe o resto antes de abrir o pull
+request. Os textos são genéricos: sem nome de empresa, de pessoa ou de outro
+produto. Os casos que o hub também roda estão em
+`test/fixtures/hub-parity-templates/`.
+
+## Pacotes
+
+Ainda não recebe: a esteira recusa arquivo em `packages/`. Pacotes vêm depois,
+com plano próprio.
