@@ -1,0 +1,47 @@
+{
+  "format": "app-marketplace-index",
+  "version": 1,
+  "commit": "bf3e65fd8ce6175911058f20b129679c6041a319",
+  "committedAt": 1795471938,
+  "items": [
+    {
+      "kind": "connection",
+      "id": "github",
+      "version": 1,
+      "path": "connections/github.json",
+      "sha256": "217e770da932c3d187cc5515c012f783ed28872d94afe7af740023ea3e55d3a0",
+      "name": {
+        "en": "GitHub",
+        "pt-BR": "GitHub"
+      },
+      "description": {
+        "en": "GitHub's official MCP server, with a personal access token that the hub keeps in its vault.",
+        "pt-BR": "Servidor MCP oficial do GitHub, com um token pessoal que o hub guarda no cofre."
+      },
+      "tags": [],
+      "requires": {
+        "runsOn": [
+          "hub"
+        ],
+        "servers": {
+          "remote": {
+            "url": "https://api.githubcopilot.com/mcp/"
+          }
+        },
+        "hosts": [
+          "api.githubcopilot.com"
+        ],
+        "methods": [
+          {
+            "type": "token"
+          }
+        ],
+        "fields": [],
+        "triggers": [],
+        "actions": []
+      },
+      "official": true
+    }
+  ],
+  "retired": {}
+}

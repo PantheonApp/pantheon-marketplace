@@ -1,0 +1,31 @@
+{
+  "kind": "connection",
+  "id": "github",
+  "version": 1,
+  "name": {
+    "en": "GitHub",
+    "pt-BR": "GitHub"
+  },
+  "description": {
+    "en": "GitHub's official MCP server, with a personal access token that the hub keeps in its vault.",
+    "pt-BR": "Servidor MCP oficial do GitHub, com um token pessoal que o hub guarda no cofre."
+  },
+  "manifest": {
+    "category": "dev",
+    "logo": "github",
+    "color": "181717",
+    "runs_on": ["hub"],
+    "methods": [
+      {
+        "type": "token",
+        "header": "Authorization"
+      }
+    ],
+    "servers": {
+      "remote": {
+        "url": "https://api.githubcopilot.com/mcp/"
+      }
+    },
+    "hosts": ["api.githubcopilot.com"]
+  }
+}
