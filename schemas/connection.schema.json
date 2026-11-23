@@ -20,7 +20,6 @@
       "minLength": 1,
       "maxLength": 40
     },
-    "package": false,
     "manifest": { "$ref": "#/$defs/manifest" }
   },
   "$defs": {

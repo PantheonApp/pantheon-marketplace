@@ -100,34 +100,17 @@ test("the commit must be a full sha", async () => {
   await assert.rejects(buildIndex(root, { commit: COMMIT, committedAt: "yesterday" }), /committedAt/);
 });
 
-test("providers sort by code unit, not by locale", async () => {
-  const catalog = mkdtempSync(join(tmpdir(), "catalog-"));
-  mkdirSync(join(catalog, "templates"));
-  const item = JSON.parse(readFileSync(join(root, "test/fixtures/templates/slack-reply.json"), "utf8"));
-  item.package.requisitos.provedores = [
-    { provedor: "anthropic", modelos: ["b", "B"] },
-    { provedor: "Zeta", modelos: ["z"] },
-  ];
-  writeFileSync(join(catalog, "templates/slack-reply.json"), JSON.stringify(item));
-  const index = JSON.parse(await buildIndex(catalog, { ...AT, folders: ["templates"] }));
-  assert.deepEqual(index.items[0].requires.providers, [
-    { provider: "Zeta", models: ["z"] },
-    { provider: "anthropic", models: ["B", "b"] },
-  ]);
-});
-
 test("the index carries minAppVersion when the item declares it, right after version, and leaves it out otherwise", async () => {
   const catalog = mkdtempSync(join(tmpdir(), "catalog-"));
-  mkdirSync(join(catalog, "templates"));
-  for (const [id, minAppVersion] of [["slack-reply", "0.1.10"], ["teams-reply", undefined]]) {
-    const item = JSON.parse(readFileSync(join(root, `test/fixtures/templates/${id}.json`), "utf8"));
-    if (minAppVersion !== undefined) item.minAppVersion = minAppVersion;
-    writeFileSync(join(catalog, `templates/${id}.json`), JSON.stringify(item));
-  }
-  const byId = Object.fromEntries(JSON.parse(await buildIndex(catalog, { ...AT, folders: ["templates"] })).items.map((i) => [i.id, i]));
-  assert.equal(byId["slack-reply"].minAppVersion, "0.1.10");
-  assert.deepEqual(Object.keys(byId["slack-reply"]).slice(0, 4), ["kind", "id", "version", "minAppVersion"]);
-  assert.equal("minAppVersion" in byId["teams-reply"], false);
+  mkdirSync(join(catalog, "connections"));
+  const item = JSON.parse(readFileSync(join(root, "connections/github.json"), "utf8"));
+  item.minAppVersion = "0.1.10";
+  writeFileSync(join(catalog, "connections/github.json"), JSON.stringify(item));
+  const [declared] = JSON.parse(await buildIndex(catalog, AT)).items;
+  assert.equal(declared.minAppVersion, "0.1.10");
+  assert.deepEqual(Object.keys(declared).slice(0, 4), ["kind", "id", "version", "minAppVersion"]);
+  const [left] = JSON.parse(await buildIndex(root, AT)).items;
+  assert.equal("minAppVersion" in left, false);
 });
 
 test("the index marks as official the connections on the maintainers' list, and no other item", async () => {

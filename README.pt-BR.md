@@ -11,8 +11,8 @@ clique no hub. Qualquer pessoa pode propor um item por PR.
   (OAuth, token, CLI ou nenhum), com qual servidor MCP remoto ele fala e o que
   libera. Hoje: GitHub.
 - `templates/` e `packages/`: ainda não recebem item, e a esteira recusa
-  arquivo nelas. Os modelos de automação têm plano próprio e chegam depois, no
-  formato `locum-pacote`, que é o que o hub converte.
+  arquivo nelas. Hoje o catálogo recebe só tipos de conexão; modelos de
+  automação e pacotes chegam depois, com plano próprio.
 
 Cada item é um arquivo JSON em `<pasta>/<id>.json`. Os esquemas estão em
 [`schemas/`](schemas/), e o [CONTRIBUTING.pt-BR.md](CONTRIBUTING.pt-BR.md)
