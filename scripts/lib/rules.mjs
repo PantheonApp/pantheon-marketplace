@@ -1,7 +1,8 @@
-// The rules a JSON Schema cannot say. A connection type follows the hub (connection-rules.mjs), and nothing in an
-// item is code that runs.
+// The rules a JSON Schema cannot say. A connection type follows the hub (connection-rules.mjs), a template too
+// (template-rules.mjs), and nothing in an item is code that runs.
 import { readFileSync } from "node:fs";
 import { connectionRules } from "./connection-rules.mjs";
+import { templateRules } from "./template-rules.mjs";
 
 const readJson = (path) => JSON.parse(readFileSync(new URL(path, import.meta.url), "utf8"));
 const officialList = readJson("./official-connections.json");
@@ -75,6 +76,7 @@ export function itemRules(item, expected) {
     }
     errors.push(...hiddenInManifest(item.manifest, "manifest"), ...connectionRules(item));
   }
+  if (item.kind === "template") errors.push(...templateRules(item));
   return errors;
 }
 

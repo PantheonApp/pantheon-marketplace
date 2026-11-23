@@ -28,8 +28,8 @@ function tempCatalog(folder) {
   return catalog;
 }
 
-test("a file in templates/ or packages/ is refused until they have their plan, whatever it holds", async () => {
-  for (const folder of ["templates", "packages"]) {
+test("a file in packages/ is refused until it has its plan, whatever it holds", async () => {
+  for (const folder of ["packages"]) {
     const catalog = tempCatalog(folder);
     writeFileSync(join(catalog, folder, "github.json"), JSON.stringify(github()));
     writeFileSync(join(catalog, folder, ".gitkeep"), "");
@@ -70,7 +70,7 @@ test("an item that is not a connection type is refused in connections/, and so i
   const kind = await validateFile(variant((item) => (item.kind = "template")));
   assert.match(kind.find((e) => e.field === "kind")?.message ?? "", /"template" item does not belong in connections\//);
   const body = await validateFile(variant((item) => (item.package = {})));
-  assert.match(body.find((e) => e.field === "package")?.message ?? "", /unknown field/);
+  assert.match(body.find((e) => e.field === "package")?.message ?? "", /body of a template/);
 });
 
 test("on a Node whose JSON.parse gives no source text, the validator stops with a clear error instead of refusing every item", () => {

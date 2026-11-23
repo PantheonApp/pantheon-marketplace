@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/PantheonApp/pantheon-marketplace/main/schemas/template.schema.json",
+  "title": "Marketplace automation template",
+  "description": "An automation template, data only: the envelope of the catalog around the automation package the hub exports (`automation-package`, version 1) and brings in as a proposal. The hub decides in the end; scripts/lib/template-rules.mjs holds what a schema cannot say, the rules of the definition the hub also refuses and what a public item never carries.",
+  "type": "object",
+  "$ref": "envelope.schema.json",
+  "required": ["package"],
+  "properties": {
+    "kind": { "const": "template" },
+    "minAppVersion": {
+      "description": "Accepted and kept by the hub, never read. Leave it out.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40
+    },
+    "min_app_version": {
+      "description": "Accepted and kept by the hub, never read. Leave it out.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40
+    },
+    "manifest": { "description": "The body of a connection type. A template carries `package` instead.", "not": {} },
+    "package": { "$ref": "#/$defs/package" }
+  },
+  "$defs": {
+    "names": { "type": "array", "items": { "type": "string", "minLength": 1, "maxLength": 200 } },
+    "package": {
+      "description": "What `GET /api/automations/{id}/package` of the hub gives, cleaned for the public: the import reads `format`, `version`, `automation.definition` and `agents`.",
+      "type": "object",
+      "required": ["format", "version", "automation"],
+      "additionalProperties": false,
+      "properties": {
+        "format": { "const": "automation-package" },
+        "version": { "const": 1 },
+        "automation": {
+          "type": "object",
+          "required": ["definition"],
+          "additionalProperties": false,
+          "properties": {
+            "id": { "description": "The id of the item. The export writes the id of the automation in the hub that made it, which a public item does not carry.", "type": "string" },
+            "name": { "type": "string", "minLength": 1, "maxLength": 200 },
+            "definition": { "$ref": "#/$defs/definition" }
+          }
+        },
+        "agents": {
+          "description": "Copies of the agents the model steps name. The import offers each one the Organization lacks as a draft.",
+          "type": "array",
+          "maxItems": 20,
+          "items": { "$ref": "#/$defs/agent" }
+        },
+        "requirements": {
+          "description": "What the destination must have, as the export lists it. The import does not read it.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "connections": { "$ref": "#/$defs/names" },
+            "apps": { "$ref": "#/$defs/names" },
+            "servers": { "$ref": "#/$defs/names" },
+            "agents": { "$ref": "#/$defs/names" },
+            "to_fill": {
+              "description": "The fields the export left out because they belong to whoever exported, for the person who installs to fill.",
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["path", "field"],
+                "additionalProperties": false,
+                "properties": { "path": { "type": "string" }, "field": { "type": "string" } }
+              }
+            }
+          }
+        }
+      }
+    },
+    "definition": {
+      "description": "The definition of the automation, as the hub saves it (`AutomationSpec`, which takes no unknown field).",
+      "type": "object",
+      "required": ["name", "steps"],
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": { "type": "integer", "minimum": 1, "maximum": 20 },
+        "name": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "description": { "type": "string" },
+        "voice_agent": { "description": "Left for whoever installs to choose: blank or absent.", "type": "string" },
+        "triggers": { "type": "array", "items": { "type": "object" } },
+        "steps": { "type": "array", "minItems": 1, "maxItems": 50, "items": { "type": "object" } },
+        "limits": { "type": "object" },
+        "group": { "type": "object" }
+      }
+    },
+    "agent": {
+      "description": "An agent as the export writes it: what it says and how it works, never who made it or where it lives.",
+      "type": "object",
+      "required": ["slug", "name", "instructions"],
+      "additionalProperties": false,
+      "properties": {
+        "slug": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "maxLength": 63 },
+        "name": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "when_to_use": { "type": "string" },
+        "instructions": { "type": "string", "minLength": 1 },
+        "model": { "type": "string" },
+        "tools": { "$ref": "#/$defs/names" },
+        "kind": { "enum": ["specialist", "generalist"] },
+        "specialists": { "$ref": "#/$defs/names" },
+        "switch_on_limit": { "enum": ["machine", "always", "never"] }
+      }
+    }
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "name": "a package without a definition",
+  "accept": false,
+  "item": {
+    "kind": "template",
+    "id": "example",
+    "version": 1,
+    "name": {
+      "en": "Example",
+      "pt-BR": "Exemplo"
+    },
+    "description": {
+      "en": "An example template.",
+      "pt-BR": "Um modelo de exemplo."
+    },
+    "tags": [
+      "example"
+    ],
+    "package": {
+      "format": "automation-package",
+      "version": 1,
+      "automation": {
+        "id": "example",
+        "name": "Example"
+      },
+      "agents": [
+        {
+          "slug": "writer",
+          "name": "Writer",
+          "when_to_use": "To write summaries.",
+          "instructions": "Write short summaries.",
+          "model": "haiku",
+          "tools": [],
+          "kind": "specialist",
+          "specialists": []
+        }
+      ],
+      "requirements": {
+        "connections": [],
+        "apps": [],
+        "servers": [],
+        "agents": [],
+        "to_fill": []
+      }
+    }
+  }
+}
