@@ -17,7 +17,7 @@
       "example"
     ],
     "package": {
-      "format": "locum-pacote",
+      "format": "other-package",
       "version": 1,
       "automation": {
         "id": "example",

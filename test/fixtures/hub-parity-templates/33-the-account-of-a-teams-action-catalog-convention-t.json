@@ -1,6 +1,7 @@
 {
-  "name": "a marker in the query of an address, filled when it runs",
-  "accept": true,
+  "name": "the account of a Teams action (catalog convention, the hub accepts it)",
+  "accept": false,
+  "hub_accepts": true,
   "item": {
     "kind": "template",
     "id": "example",
@@ -65,16 +66,16 @@
               }
             },
             {
-              "key": "call",
+              "key": "post",
               "kind": "action",
-              "action": "http.request",
+              "action": "teams.post",
               "mode": "approve",
               "needs": [
                 "summary"
               ],
               "params": {
-                "method": "POST",
-                "url": "https://api.example.com/x?token={{event.token}}"
+                "text": "x",
+                "account": "work"
               }
             }
           ]

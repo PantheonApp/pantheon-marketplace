@@ -1,6 +1,7 @@
 {
-  "name": "a credential in a header",
+  "name": "a zero width space in a param (catalog convention, the hub accepts it)",
   "accept": false,
+  "hub_accepts": true,
   "item": {
     "kind": "template",
     "id": "example",
@@ -60,24 +61,8 @@
                 "summary"
               ],
               "params": {
-                "title": "Example",
+                "title": "Ex\u200bample",
                 "body": "{{steps.summary.text}}"
-              }
-            },
-            {
-              "key": "call",
-              "kind": "action",
-              "action": "http.request",
-              "mode": "approve",
-              "needs": [
-                "summary"
-              ],
-              "params": {
-                "method": "POST",
-                "url": "https://api.example.com/v1/items",
-                "headers": {
-                  "Authorization": "Bearer abc"
-                }
               }
             }
           ]

@@ -1,6 +1,7 @@
 {
-  "name": "a webhook address",
+  "name": "a bidi control in a prompt (catalog convention, the hub accepts it)",
   "accept": false,
+  "hub_accepts": true,
   "item": {
     "kind": "template",
     "id": "example",
@@ -37,7 +38,7 @@
               "name": "Summarize",
               "kind": "model",
               "agent": "writer",
-              "prompt": "Summarize the day.",
+              "prompt": "Summarize\u202e the day.",
               "output_schema": {
                 "type": "object",
                 "required": [
@@ -62,19 +63,6 @@
               "params": {
                 "title": "Example",
                 "body": "{{steps.summary.text}}"
-              }
-            },
-            {
-              "key": "call",
-              "kind": "action",
-              "action": "http.request",
-              "mode": "approve",
-              "needs": [
-                "summary"
-              ],
-              "params": {
-                "method": "POST",
-                "url": "https://hooks.slack.com/services/T000/B000/XXXX"
               }
             }
           ]

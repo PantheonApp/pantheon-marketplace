@@ -1,6 +1,7 @@
 {
-  "name": "the account of a Teams action",
+  "name": "an address filled by a marker in the args of a poll (catalog convention, the hub accepts it)",
   "accept": false,
+  "hub_accepts": true,
   "item": {
     "kind": "template",
     "id": "example",
@@ -29,6 +30,15 @@
           "triggers": [
             {
               "kind": "manual"
+            },
+            {
+              "kind": "mcp_poll",
+              "connection": "docs",
+              "tool": "list",
+              "dedupe_key": "id",
+              "args": {
+                "url": "{{event.base}}/items"
+              }
             }
           ],
           "steps": [
@@ -62,19 +72,6 @@
               "params": {
                 "title": "Example",
                 "body": "{{steps.summary.text}}"
-              }
-            },
-            {
-              "key": "post",
-              "kind": "action",
-              "action": "teams.post",
-              "mode": "approve",
-              "needs": [
-                "summary"
-              ],
-              "params": {
-                "text": "x",
-                "account": "work"
               }
             }
           ]

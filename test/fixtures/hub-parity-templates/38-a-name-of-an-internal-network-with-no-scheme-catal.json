@@ -1,6 +1,7 @@
 {
-  "name": "the chats of a Teams inbox",
+  "name": "a name of an internal network with no scheme (catalog convention, the hub accepts it)",
   "accept": false,
+  "hub_accepts": true,
   "item": {
     "kind": "template",
     "id": "example",
@@ -29,12 +30,6 @@
           "triggers": [
             {
               "kind": "manual"
-            },
-            {
-              "kind": "teams_inbox",
-              "chats": [
-                "x"
-              ]
             }
           ],
           "steps": [
@@ -43,7 +38,7 @@
               "name": "Summarize",
               "kind": "model",
               "agent": "writer",
-              "prompt": "Summarize the day.",
+              "prompt": "See grafana.corp.local for the graphs.",
               "output_schema": {
                 "type": "object",
                 "required": [

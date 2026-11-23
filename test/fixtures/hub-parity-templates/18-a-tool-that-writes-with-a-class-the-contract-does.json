@@ -1,5 +1,5 @@
 {
-  "name": "a fixed list of repositories",
+  "name": "a tool that writes with a class the contract does not know",
   "accept": false,
   "item": {
     "kind": "template",
@@ -29,13 +29,6 @@
           "triggers": [
             {
               "kind": "manual"
-            },
-            {
-              "kind": "github_poll",
-              "on": "new_head",
-              "repos": [
-                "some-org/api"
-              ]
             }
           ],
           "steps": [
@@ -55,7 +48,13 @@
                     "type": "string"
                   }
                 }
-              }
+              },
+              "write_tools": [
+                {
+                  "name": "github__create_issue",
+                  "class": "outside"
+                }
+              ]
             },
             {
               "key": "notify",

@@ -1,6 +1,7 @@
 {
-  "name": "an action that only reads, in auto",
-  "accept": true,
+  "name": "a private address with a port and no scheme (catalog convention, the hub accepts it)",
+  "accept": false,
+  "hub_accepts": true,
   "item": {
     "kind": "template",
     "id": "example",
@@ -37,7 +38,7 @@
               "name": "Summarize",
               "kind": "model",
               "agent": "writer",
-              "prompt": "Summarize the day.",
+              "prompt": "Read 10.0.0.5:8080 first.",
               "output_schema": {
                 "type": "object",
                 "required": [
@@ -63,13 +64,6 @@
                 "title": "Example",
                 "body": "{{steps.summary.text}}"
               }
-            },
-            {
-              "key": "wait",
-              "kind": "action",
-              "action": "github.checks_wait",
-              "mode": "auto",
-              "params": {}
             }
           ]
         }

@@ -1,5 +1,5 @@
 {
-  "name": "a template with a manual trigger, a model step and a local notification in auto",
+  "name": "a template with a manual trigger, a model step and a local notification in auto (the voice is blank on purpose: the hub fills in the voice of whoever installs before it checks)",
   "accept": true,
   "item": {
     "kind": "template",

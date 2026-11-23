@@ -1,5 +1,5 @@
 {
-  "name": "an action that writes outside in auto, which the hub lowers to approve",
+  "name": "a poll every 0 minutes",
   "accept": false,
   "item": {
     "kind": "template",
@@ -29,6 +29,11 @@
           "triggers": [
             {
               "kind": "manual"
+            },
+            {
+              "kind": "github_poll",
+              "on": "new_head",
+              "every_minutes": 0
             }
           ],
           "steps": [
@@ -62,18 +67,6 @@
               "params": {
                 "title": "Example",
                 "body": "{{steps.summary.text}}"
-              }
-            },
-            {
-              "key": "post",
-              "kind": "action",
-              "action": "teams.post",
-              "mode": "auto",
-              "needs": [
-                "summary"
-              ],
-              "params": {
-                "text": "{{steps.summary.text}}"
               }
             }
           ]

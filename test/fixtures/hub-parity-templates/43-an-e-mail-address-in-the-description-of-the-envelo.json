@@ -1,6 +1,7 @@
 {
-  "name": "an action the hub does not know",
+  "name": "an e-mail address in the description of the envelope (catalog convention, the hub accepts it)",
   "accept": false,
+  "hub_accepts": true,
   "item": {
     "kind": "template",
     "id": "example",
@@ -10,7 +11,7 @@
       "pt-BR": "Exemplo"
     },
     "description": {
-      "en": "An example template.",
+      "en": "Ask someone@example.com.",
       "pt-BR": "Um modelo de exemplo."
     },
     "tags": [
@@ -54,7 +55,7 @@
               "key": "notify",
               "name": "Notify",
               "kind": "action",
-              "action": "shell.run",
+              "action": "desktop.notify",
               "mode": "auto",
               "needs": [
                 "summary"

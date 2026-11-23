@@ -1,6 +1,6 @@
 {
-  "name": "a GitHub owner on a poll",
-  "accept": false,
+  "name": "a marker in the query of an address of an http request, filled when it runs (the voice is blank on purpose: the hub fills in the voice of whoever installs before it checks)",
+  "accept": true,
   "item": {
     "kind": "template",
     "id": "example",
@@ -29,11 +29,6 @@
           "triggers": [
             {
               "kind": "manual"
-            },
-            {
-              "kind": "github_poll",
-              "on": "new_head",
-              "owner": "some-org"
             }
           ],
           "steps": [
@@ -67,6 +62,19 @@
               "params": {
                 "title": "Example",
                 "body": "{{steps.summary.text}}"
+              }
+            },
+            {
+              "key": "call",
+              "kind": "action",
+              "action": "http.request",
+              "mode": "approve",
+              "needs": [
+                "summary"
+              ],
+              "params": {
+                "method": "POST",
+                "url": "https://api.example.com/x?token={{event.token}}"
               }
             }
           ]
