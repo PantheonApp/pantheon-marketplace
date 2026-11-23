@@ -1,0 +1,11 @@
+# The official connection ids (scripts/lib/official-connections.json) are published only by the maintainers.
+# npm run validate checks that every one of them is listed here with the owners of this file.
+
+* @BrunoTCouto @RabahZeineddine
+
+/.github/ @BrunoTCouto @RabahZeineddine
+/keys/ @BrunoTCouto @RabahZeineddine
+/schemas/ @BrunoTCouto @RabahZeineddine
+/scripts/ @BrunoTCouto @RabahZeineddine
+
+/connections/github.json @BrunoTCouto @RabahZeineddine

@@ -1,0 +1,36 @@
+{
+  "name": "min_app_version over 40 bytes in fewer characters",
+  "accept": false,
+  "item": {
+    "kind": "connection",
+    "id": "example",
+    "version": 1,
+    "name": {
+      "en": "Example",
+      "pt-BR": "Exemplo"
+    },
+    "description": {
+      "en": "An example type.",
+      "pt-BR": "Um tipo de exemplo."
+    },
+    "manifest": {
+      "category": "dev",
+      "logo": null,
+      "color": "112233",
+      "runs_on": [
+        "hub"
+      ],
+      "methods": [
+        {
+          "type": "token"
+        }
+      ],
+      "servers": {
+        "remote": {
+          "url": "https://mcp.example.com/mcp"
+        }
+      }
+    },
+    "min_app_version": "ééééééééééééééééééééé"
+  }
+}

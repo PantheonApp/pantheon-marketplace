@@ -1,0 +1,173 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/PantheonApp/pantheon-marketplace/main/schemas/connection.schema.json",
+  "title": "Marketplace connection type",
+  "description": "A connection type, data only: where it runs, how a person signs in, which remote server it talks to and what it unlocks. It mirrors connection_types::validate of the hub as a catalog source; scripts/lib/connection-rules.mjs holds what a schema cannot say. The manifest is closed, as in the hub: a key nobody reads is a key that could carry an address nobody checks.",
+  "type": "object",
+  "$ref": "envelope.schema.json",
+  "required": ["manifest"],
+  "properties": {
+    "kind": { "const": "connection" },
+    "minAppVersion": {
+      "description": "Accepted and kept by the hub, never read. Leave it out.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40
+    },
+    "min_app_version": {
+      "description": "Accepted and kept by the hub, never read. Leave it out.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40
+    },
+    "package": false,
+    "manifest": { "$ref": "#/$defs/manifest" }
+  },
+  "$defs": {
+    "text": {
+      "type": "object",
+      "required": ["en", "pt-BR"],
+      "properties": {
+        "en": { "type": "string", "minLength": 1, "maxLength": 2000 },
+        "pt-BR": { "type": "string", "minLength": 1, "maxLength": 2000 }
+      }
+    },
+    "url": { "type": "string", "minLength": 1 },
+    "entry": {
+      "description": "A trigger or action: a name, or an object whose label and description come in both languages.",
+      "oneOf": [
+        { "type": "string" },
+        {
+          "type": "object",
+          "properties": {
+            "label": { "$ref": "#/$defs/text" },
+            "description": { "$ref": "#/$defs/text" }
+          }
+        }
+      ]
+    },
+    "manifest": {
+      "type": "object",
+      "required": ["category", "logo", "color", "runs_on", "methods"],
+      "additionalProperties": false,
+      "properties": {
+        "category": { "enum": ["dev", "communication", "work", "observability", "data", "home"] },
+        "logo": { "description": "Logo key known to the app, or null for the generic icon.", "type": ["string", "null"], "minLength": 1 },
+        "color": { "description": "Brand color without #, for the generic icon.", "type": "string", "pattern": "^[0-9A-Fa-f]{6}$" },
+        "runs_on": {
+          "description": "Where the type runs: the hub, the person's Mac, or both. Whatever it says, an item of this catalog talks only to public https hosts.",
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "enum": ["hub", "mac"] }
+        },
+        "methods": {
+          "description": "How a person signs in. oauth needs runs_on hub and the oauth block; cli needs runs_on mac and a reader. session is not accepted yet.",
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/method" }
+        },
+        "hosts": {
+          "description": "Hosts the type may talk to besides the ones of its URLs, which join on their own.",
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "servers": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "remote": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": { "url": { "$ref": "#/$defs/url" } }
+            }
+          }
+        },
+        "oauth": { "$ref": "#/$defs/oauth" },
+        "triggers": { "type": "array", "items": { "$ref": "#/$defs/entry" } },
+        "actions": { "type": "array", "items": { "$ref": "#/$defs/entry" } },
+        "tools": {
+          "description": "When present, the list of the remote server's tools the hub may keep, by name; read_only stands in for the server's hint.",
+          "type": "array",
+          "items": {
+            "oneOf": [
+              { "type": "string" },
+              {
+                "type": "object",
+                "required": ["name"],
+                "properties": {
+                  "name": { "type": "string" },
+                  "read_only": { "type": "boolean" },
+                  "label": { "$ref": "#/$defs/text" },
+                  "description": { "$ref": "#/$defs/text" }
+                }
+              }
+            ]
+          }
+        },
+        "scope_keys": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              { "type": "string" },
+              {
+                "type": "object",
+                "required": ["description"],
+                "properties": {
+                  "label": { "$ref": "#/$defs/text" },
+                  "description": { "$ref": "#/$defs/text" }
+                }
+              }
+            ]
+          }
+        },
+        "memory_keys": { "description": "Kept by the hub, not read yet." },
+        "trackers": { "description": "Kept by the hub, not read yet." },
+        "fields": {
+          "description": "What a person fills in when making a connection of this type, none of it secret.",
+          "type": "array",
+          "maxItems": 20,
+          "items": {
+            "type": "object",
+            "required": ["key", "label"],
+            "additionalProperties": false,
+            "properties": {
+              "key": { "type": "string", "pattern": "^[a-z][a-z0-9_]{0,31}$" },
+              "label": { "$ref": "#/$defs/text" },
+              "required": { "type": "boolean" }
+            }
+          }
+        },
+        "identity": {
+          "description": "person: the account is a person's. service: a service account, the only kind the organization may connect once for everyone.",
+          "enum": ["person", "service"]
+        }
+      }
+    },
+    "method": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": { "enum": ["oauth", "token", "cli", "none", "session"] },
+        "header": { "description": "A header name: printable ASCII, no colon.", "type": "string", "pattern": "^[!-9;-~]+$" },
+        "reader": { "type": "string" }
+      }
+    },
+    "oauth": {
+      "type": "object",
+      "required": ["authorization_url", "token_url", "use_pkce"],
+      "additionalProperties": false,
+      "properties": {
+        "authorization_url": { "$ref": "#/$defs/url" },
+        "token_url": { "$ref": "#/$defs/url" },
+        "registration_url": { "$ref": "#/$defs/url" },
+        "revoke_url": { "$ref": "#/$defs/url" },
+        "client_id": { "type": "string" },
+        "scope": { "type": "string" },
+        "use_pkce": { "description": "The hub does OAuth only with PKCE, and only when the type says so.", "const": true },
+        "auth_method": { "enum": ["none", "client_secret_basic", "client_secret_post"] },
+        "dynamic_registration": { "type": "boolean" }
+      }
+    }
+  }
+}

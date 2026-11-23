@@ -1,0 +1,13 @@
+{
+  "reserved": [],
+  "official": {
+    "github": {
+      "hosts": [
+        "api.githubcopilot.com"
+      ],
+      "names": [
+        "GitHub"
+      ]
+    }
+  }
+}
