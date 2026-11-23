@@ -5,9 +5,13 @@
   "description": "An automation template, data only: the envelope of the catalog around the automation package the hub exports (`automation-package`, version 1) and brings in as a proposal. The hub decides in the end; scripts/lib/template-rules.mjs holds what a schema cannot say, the rules of the definition the hub also refuses and what a public item never carries.",
   "type": "object",
   "$ref": "envelope.schema.json",
-  "required": ["package"],
+  "required": [
+    "package"
+  ],
   "properties": {
-    "kind": { "const": "template" },
+    "kind": {
+      "const": "template"
+    },
     "minAppVersion": {
       "description": "Accepted and kept by the hub, never read. Leave it out.",
       "type": "string",
@@ -20,52 +24,103 @@
       "minLength": 1,
       "maxLength": 40
     },
-    "manifest": { "description": "The body of a connection type. A template carries `package` instead.", "not": {} },
-    "package": { "$ref": "#/$defs/package" }
+    "manifest": {
+      "description": "The body of a connection type. A template carries `package` instead.",
+      "not": {}
+    },
+    "package": {
+      "$ref": "#/$defs/package"
+    }
   },
   "$defs": {
-    "names": { "type": "array", "items": { "type": "string", "minLength": 1, "maxLength": 200 } },
+    "names": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 200
+      }
+    },
     "package": {
       "description": "What `GET /api/automations/{id}/package` of the hub gives, cleaned for the public: the import reads `format`, `version`, `automation.definition` and `agents`.",
       "type": "object",
-      "required": ["format", "version", "automation"],
+      "required": [
+        "format",
+        "version",
+        "automation"
+      ],
       "additionalProperties": false,
       "properties": {
-        "format": { "const": "automation-package" },
-        "version": { "const": 1 },
+        "format": {
+          "const": "automation-package"
+        },
+        "version": {
+          "const": 1
+        },
         "automation": {
           "type": "object",
-          "required": ["definition"],
+          "required": [
+            "definition"
+          ],
           "additionalProperties": false,
           "properties": {
-            "id": { "description": "The id of the item. The export writes the id of the automation in the hub that made it, which a public item does not carry.", "type": "string" },
-            "name": { "type": "string", "minLength": 1, "maxLength": 200 },
-            "definition": { "$ref": "#/$defs/definition" }
+            "id": {
+              "description": "The id of the item. The export writes the id of the automation in the hub that made it, which a public item does not carry.",
+              "type": "string"
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "definition": {
+              "$ref": "#/$defs/definition"
+            }
           }
         },
         "agents": {
           "description": "Copies of the agents the model steps name. The import offers each one the Organization lacks as a draft.",
           "type": "array",
           "maxItems": 20,
-          "items": { "$ref": "#/$defs/agent" }
+          "items": {
+            "$ref": "#/$defs/agent"
+          }
         },
         "requirements": {
           "description": "What the destination must have, as the export lists it. The import does not read it.",
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "connections": { "$ref": "#/$defs/names" },
-            "apps": { "$ref": "#/$defs/names" },
-            "servers": { "$ref": "#/$defs/names" },
-            "agents": { "$ref": "#/$defs/names" },
+            "connections": {
+              "$ref": "#/$defs/names"
+            },
+            "apps": {
+              "$ref": "#/$defs/names"
+            },
+            "servers": {
+              "$ref": "#/$defs/names"
+            },
+            "agents": {
+              "$ref": "#/$defs/names"
+            },
             "to_fill": {
               "description": "The fields the export left out because they belong to whoever exported, for the person who installs to fill.",
               "type": "array",
               "items": {
                 "type": "object",
-                "required": ["path", "field"],
+                "required": [
+                  "path",
+                  "field"
+                ],
                 "additionalProperties": false,
-                "properties": { "path": { "type": "string" }, "field": { "type": "string" } }
+                "properties": {
+                  "path": {
+                    "type": "string"
+                  },
+                  "field": {
+                    "type": "string"
+                  }
+                }
               }
             }
           }
@@ -75,34 +130,215 @@
     "definition": {
       "description": "The definition of the automation, as the hub saves it (`AutomationSpec`, which takes no unknown field).",
       "type": "object",
-      "required": ["name", "steps"],
+      "required": [
+        "name",
+        "steps"
+      ],
       "additionalProperties": false,
       "properties": {
-        "schema_version": { "type": "integer", "minimum": 1, "maximum": 20 },
-        "name": { "type": "string", "minLength": 1, "maxLength": 200 },
-        "description": { "type": "string" },
-        "voice_agent": { "description": "Left for whoever installs to choose: blank or absent.", "type": "string" },
-        "triggers": { "type": "array", "items": { "type": "object" } },
-        "steps": { "type": "array", "minItems": 1, "maxItems": 50, "items": { "type": "object" } },
-        "limits": { "type": "object" },
-        "group": { "type": "object" }
+        "schema_version": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "description": {
+          "type": "string"
+        },
+        "voice_agent": {
+          "description": "Blank on purpose: the hub fills in the voice of whoever installs before it checks the definition.",
+          "type": "string"
+        },
+        "triggers": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "steps": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 50,
+          "items": {
+            "type": "object"
+          }
+        },
+        "limits": {
+          "description": "The ceilings of a run (`Limits` and `check_limits` of automation.rs).",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "per_run_micros": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 100000000
+                }
+              ]
+            },
+            "per_day_micros": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000000000
+            },
+            "per_run_tokens": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100000000
+            },
+            "per_day_tokens": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000000000
+            },
+            "max_minutes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1440
+            },
+            "max_reruns_per_subject": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            },
+            "on_limit": {
+              "enum": [
+                "pause",
+                "fail"
+              ]
+            }
+          }
+        },
+        "group": {
+          "description": "Events about the same subject that arrive close together become one run (`Group` of automation.rs).",
+          "type": "object",
+          "required": [
+            "key",
+            "window_minutes",
+            "after_run"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "key": {
+              "type": "string",
+              "minLength": 1
+            },
+            "window_minutes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1440
+            },
+            "after_run": {
+              "enum": [
+                "cover",
+                "rerun"
+              ]
+            },
+            "max": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500
+            },
+            "principal": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "cover_minutes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10080
+            },
+            "outside": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "trigger_keys": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "trigger",
+                  "key"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "trigger": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "key": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "agent": {
       "description": "An agent as the export writes it: what it says and how it works, never who made it or where it lives.",
       "type": "object",
-      "required": ["slug", "name", "instructions"],
+      "required": [
+        "slug",
+        "name",
+        "instructions"
+      ],
       "additionalProperties": false,
       "properties": {
-        "slug": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "maxLength": 63 },
-        "name": { "type": "string", "minLength": 1, "maxLength": 200 },
-        "when_to_use": { "type": "string" },
-        "instructions": { "type": "string", "minLength": 1 },
-        "model": { "type": "string" },
-        "tools": { "$ref": "#/$defs/names" },
-        "kind": { "enum": ["specialist", "generalist"] },
-        "specialists": { "$ref": "#/$defs/names" },
-        "switch_on_limit": { "enum": ["machine", "always", "never"] }
+        "slug": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+          "maxLength": 63
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "when_to_use": {
+          "type": "string"
+        },
+        "instructions": {
+          "type": "string",
+          "minLength": 1
+        },
+        "model": {
+          "type": "string"
+        },
+        "tools": {
+          "$ref": "#/$defs/names"
+        },
+        "kind": {
+          "enum": [
+            "specialist",
+            "generalist"
+          ]
+        },
+        "specialists": {
+          "$ref": "#/$defs/names"
+        },
+        "switch_on_limit": {
+          "enum": [
+            "machine",
+            "always",
+            "never"
+          ]
+        }
       }
     }
   }

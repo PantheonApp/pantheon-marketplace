@@ -74,7 +74,7 @@ for (const [what, change, field, pattern] of [
   ["a description without en", (i) => delete i.description.en, "description.en", /required/],
   ["no package", (i) => delete i.package, "package", /required/],
   ["a manifest, which is the body of a connection type", (i) => (i.manifest = {}), "manifest", /body of a connection type/],
-  ["another package format", (i) => (i.package.format = "locum-pacote"), "package.format", /automation-package/],
+  ["another package format", (i) => (i.package.format = "other-package"), "package.format", /automation-package/],
   ["another package version", (i) => (i.package.version = 2), "package.version", /1/],
   ["a package without a definition", (i) => delete i.package.automation.definition, "package.automation.definition", /required/],
 ]) {
@@ -174,4 +174,55 @@ test("the index lists a template with its envelope, and the job that signs takes
   assert.deepEqual(entry.tags, ["example"]);
   assert.equal(Object.hasOwn(entry, "requires"), false);
   assert.deepEqual(checkIndex({ root: catalog, index: Buffer.from(index), commit, committedAt: 1000, now: 1000, retired: {} }), []);
+});
+
+// The ceilings of the contract (`check_ceilings`, `check_limits` and the checks of each step in automation.rs).
+const bigText = (bytes) => "a".repeat(bytes);
+for (const [what, change, field, pattern] of [
+  ["a description over 4 KiB", (i, d) => (d.description = bigText(4 * 1024 + 1)), `${D}.description`, /4096 bytes/],
+  ["a prompt over 64 KiB", (i, d) => (d.steps[0].prompt = bigText(64 * 1024 + 1)), `${D}.steps.0.prompt`, /65536 bytes/],
+  ["a step with more than 32 needs", (i, d) => (d.steps[1].needs = Array(33).fill("summary")), `${D}.steps.1.needs`, /32/],
+  ["max_turns over 200", (i, d) => (d.steps[0].max_turns = 201), `${D}.steps.0.max_turns`, /200/],
+  ["more than 32 tools", (i, d) => (d.steps[0].tools = Array.from({ length: 33 }, (_, n) => `github__tool_${n}`)), `${D}.steps.0.tools`, /32/],
+  ["more than 32 tools that write", (i, d) => (d.steps[0].write_tools = Array.from({ length: 33 }, (_, n) => ({ name: `github__w${n}`, class: "external_write" }))), `${D}.steps.0.write_tools`, /32/],
+  ["a tool that writes without a class the contract knows", (i, d) => (d.steps[0].write_tools = [{ name: "github__create_issue", class: "outside" }]), `${D}.steps.0.write_tools.0.class`, /internal_write/],
+  ["a schedule over a week", (i, d) => (d.triggers[0] = { kind: "schedule", every_minutes: 10081 }), `${D}.triggers.0.every_minutes`, /10080/],
+  ["a poll every 0 minutes", (i, d) => d.triggers.push({ kind: "github_poll", on: "new_head", every_minutes: 0 }), `${D}.triggers.1.every_minutes`, /10080/],
+  ["a model step with a timeout over 120 minutes", (i, d) => (d.steps[0].timeout_minutes = 121), `${D}.steps.0.timeout_minutes`, /120/],
+  ["a for_each over 100 items", (i, d) => (d.steps[1].for_each = { over: "{{steps.summary.items}}", max: 101 }), `${D}.steps.1.for_each.max`, /100/],
+  ["limits with a field the contract does not have", (i, d) => (d.limits = { per_run_usd: 1 }), `${D}.limits.per_run_usd`, /unknown field/],
+  ["a run longer than a day", (i, d) => (d.limits = { max_minutes: 1441 }), `${D}.limits.max_minutes`, /1440/],
+  ["a limit on what happens past it that the contract does not know", (i, d) => (d.limits = { on_limit: "stop" }), `${D}.limits.on_limit`, /pause/],
+  ["a group without a window", (i, d) => (d.group = { key: "{{event.repo}}", after_run: "cover" }), `${D}.group.window_minutes`, /required/],
+  ["a group with a window over a day", (i, d) => (d.group = { key: "{{event.repo}}", window_minutes: 1441, after_run: "cover" }), `${D}.group.window_minutes`, /1440/],
+]) {
+  test(`a template with ${what} is refused`, async () => {
+    const errors = await check(variant(change));
+    assert.ok(errors.some((e) => e.field === field && pattern.test(e.message)), messages(errors));
+  });
+}
+
+// Text that hides or reorders what the person reads, in any string of the template; what identifies a person or a
+// network in the envelope too; an address on an internal network written without a scheme; and an address that a
+// marker fills where nothing guards where it goes.
+for (const [what, change, field, pattern] of [
+  ["a bidi control in a prompt", (i, d) => (d.steps[0].prompt = "Summarize‮ the day."), `${D}.steps.0.prompt`, /U\+202E/],
+  ["a tag character in the instructions of an agent", (i) => (i.package.agents[0].instructions = "Write\u{E0041}\u{E0042} short summaries."), "package.agents.0.instructions", /U\+E0041/],
+  ["a zero width space in a param", (i, d) => (d.steps[1].params.title = "Ex​ample"), `${D}.steps.1.params.title`, /U\+200B/],
+  ["a tag character in the name of the envelope", (i) => (i.name.en = "Example\u{E0020}"), "name.en", /U\+E0020/],
+  ["an e-mail address in the description of the envelope", (i) => (i.description.en = "Ask someone@example.com."), "description.en", /e-mail/],
+  ["an internal address in the tags", (i) => (i.tags = ["intranet-corp", "10.0.0.5"]), "tags.1", /internal address/],
+  ["a private address with a port and no scheme", (i, d) => (d.steps[0].prompt = "Read 10.0.0.5:8080 first."), `${D}.steps.0.prompt`, /internal address/],
+  ["a name of an internal network with no scheme", (i, d) => (d.steps[0].prompt = "See grafana.corp.local for the graphs."), `${D}.steps.0.prompt`, /internal address/],
+  ["an address filled by a marker in a tool read", (i, d) => d.steps.push({ key: "read", kind: "read", source: "tool", params: { connection: "docs", tool: "fetch", args: { url: "https://{{event.host}}/status" } } }), `${D}.steps.2.params.args.url`, /marker/],
+  ["an address filled by a marker in the args of a poll", (i, d) => d.triggers.push({ kind: "mcp_poll", connection: "docs", tool: "list", dedupe_key: "id", args: { url: "{{event.base}}/items" } }), `${D}.triggers.1.args.url`, /marker/],
+]) {
+  test(`a template with ${what} is refused`, async () => {
+    const errors = await check(variant(change));
+    assert.ok(errors.some((e) => e.field === field && pattern.test(e.message)), messages(errors));
+  });
+}
+
+test("a version number, a file name and a marker in a prompt are not addresses", async () => {
+  assert.deepEqual(await check(variant((i, d) => (d.steps[0].prompt = "Read CLAUDE.md and {{event.repo}} at release 1.2.3, then steps.summary.text."))), []);
 });

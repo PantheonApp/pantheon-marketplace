@@ -1,8 +1,9 @@
 // The rules of a template that a JSON Schema cannot say. The package is the one the hub exports and brings in
-// (`automation_package.rs` and `locum_import::import_package`), and the definition follows the contract of app-core
+// (`automation_package.rs` and `import_package`), and the definition follows the contract of app-core
 // (`automation.rs` and `automation/actions.rs`). The hub decides in the end: this checks what it would also refuse or
 // lower without a word, and what a public item never carries.
 import { hostError, parseUrl } from "./connection-rules.mjs";
+import { hiddenText } from "./hidden-text.mjs";
 
 const isObject = (v) => typeof v === "object" && v !== null && !Array.isArray(v);
 const field = (...parts) => parts.filter((p) => p !== "").join(".");
@@ -12,10 +13,22 @@ const isMarker = (text) => text.includes("{{");
 export const SCHEMA_VERSION = 20;
 /** Most characters of a step key (`KEY_MAX`). */
 const KEY_MAX = 40;
+/** The ceilings of automation.rs, with the names it gives them. */
+const DESCRIPTION_MAX_BYTES = 4 * 1024;
+const PROMPT_MAX_BYTES = 64 * 1024;
+const NEEDS_MAX = 32;
+const MAX_TURNS_MAX = 200;
+const TOOLS_MAX = 32;
+const EVERY_MINUTES_MAX = 10080;
+const TIMEOUT_MINUTES_MAX = 120;
+const FOR_EACH_MAX = 100;
+const TOOL_CLASSES = ["internal_write", "external_write"];
+const bytes = (text) => Buffer.byteLength(text, "utf8");
+const outside = (value, min, max) => value !== undefined && !(Number.isInteger(value) && value >= min && value <= max);
 
 /**
  * The actions the contract knows (`ACTIONS` of actions.rs): what each does to the world, whether the engine runs it
- * (`runs_here`) and whether the Locum keeps it behind an approval (`approve_only`).
+ * (`runs_here`) and whether the contract keeps it behind an approval (`approve_only`).
  */
 const ACTIONS = new Map(
   [
@@ -108,6 +121,9 @@ const UUID = /\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/i
 const TEAMS_ID = /\b19:[^\s"]+@(?:thread\.[a-z0-9]+|unq\.gbl\.spaces)\b/i;
 const SLACK_ID = /^[UWCGDB][A-Z0-9]{8,11}$/;
 const SLACK_MENTION = /<[@#!][UWCGDBS][A-Z0-9]{8,11}[|>]/;
+/** An address with no scheme: a private IPv4 with or without a port, `localhost`, or a name under an internal suffix. */
+const BARE_IP = /(?<![\w.])(?:\d{1,3}\.){3}\d{1,3}(?::\d+)?(?![\w.])/g;
+const BARE_INTERNAL = /(?<![\w.@-])(?:[a-z0-9-]+\.)+(?:local|internal|localdomain|lan|intranet|corp|home|private)(?::\d+)?(?![\w.-])|\blocalhost(?::\d+)?\b/gi;
 const EMAIL = /[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}\b/;
 
 /** Why a text identifies a person, an Organization, a conversation or a network, or carries a credential; undefined when it does not. */
@@ -119,6 +135,10 @@ function privateText(text) {
     const parsed = parseUrl(url);
     if (parsed.error === "must not carry a user and password") return "has an address with a login, which is a credential";
     const why = parsed.error === undefined ? hostError(parsed.host) : undefined;
+    if (why !== undefined) return `has an internal address (${why}): a public item takes public names only`;
+  }
+  for (const [bare] of [...text.matchAll(BARE_IP), ...text.matchAll(BARE_INTERNAL)]) {
+    const why = hostError(bare.replace(/:\d+$/, ""));
     if (why !== undefined) return `has an internal address (${why}): a public item takes public names only`;
   }
   if (TEAMS_ID.test(text)) return "has the id of a Teams chat or channel, which belongs to whoever exported";
@@ -147,6 +167,16 @@ function namedCredentials(value, at) {
   );
 }
 
+/** Every string that a marker turns into an address, at any depth: only http.request checks where it goes when it runs. */
+function markerAddresses(value, at, key = "") {
+  if (Array.isArray(value)) return value.flatMap((v, i) => markerAddresses(v, field(at, i), key));
+  if (isObject(value)) return Object.entries(value).flatMap(([k, v]) => markerAddresses(v, field(at, k), k));
+  if (typeof value !== "string" || !isMarker(value)) return [];
+  const addressKey = ["url", "uri", "endpoint", "host"].some((s) => key.replace(/[_-]/g, "").toLowerCase().endsWith(s));
+  if (!/https?:\/\/\S*\{\{/i.test(value) && !addressKey) return [];
+  return [{ field: at, message: "an address filled by a marker could point anywhere when it runs, and only http.request checks where it goes: write the address" }];
+}
+
 const unknownFields = (object, allowed, at) => Object.keys(object).filter((k) => !allowed.includes(k)).map((k) => ({ field: field(at, k), message: "unknown field" }));
 
 function triggerErrors(trigger, at) {
@@ -161,6 +191,8 @@ function triggerErrors(trigger, at) {
     errors.push({ field: field(at, "repos"), message: "names repositories of a fixed GitHub owner: leave it out, for whoever installs to pick" });
   }
   errors.push(...namedCredentials(trigger.args, field(at, "args")));
+  if (trigger.kind === "mcp_poll") errors.push(...markerAddresses(trigger.args, field(at, "args")));
+  if (outside(trigger.every_minutes, 1, EVERY_MINUTES_MAX)) errors.push({ field: field(at, "every_minutes"), message: `use 1 to ${EVERY_MINUTES_MAX} minutes` });
   return errors;
 }
 
@@ -175,8 +207,21 @@ function stepErrors(step, at, keys) {
   for (const need of Array.isArray(step.needs) ? step.needs : []) {
     if (!keys.has(need) || need === step.key) errors.push({ field: field(at, "needs"), message: `needs "${need}", which is not another step of the definition` });
   }
+  if (Array.isArray(step.needs) && step.needs.length > NEEDS_MAX) errors.push({ field: field(at, "needs"), message: `${step.needs.length} needs, over the ${NEEDS_MAX} the hub takes` });
   if (isObject(step.when) && !keys.has(step.when.step)) errors.push({ field: field(at, "when", "step"), message: `"${step.when.step}" is not a step of the definition` });
+  if (step.kind === "read" && step.source === "tool") errors.push(...markerAddresses(step.params, field(at, "params")));
   if (step.kind === "model") {
+    if (typeof step.prompt === "string" && bytes(step.prompt) > PROMPT_MAX_BYTES) errors.push({ field: field(at, "prompt"), message: `${bytes(step.prompt)} bytes, over the ${PROMPT_MAX_BYTES} bytes the hub takes` });
+    if (outside(step.max_turns, 0, MAX_TURNS_MAX)) errors.push({ field: field(at, "max_turns"), message: `use up to ${MAX_TURNS_MAX} turns` });
+    if (outside(step.timeout_minutes, 1, TIMEOUT_MINUTES_MAX)) errors.push({ field: field(at, "timeout_minutes"), message: `use 1 to ${TIMEOUT_MINUTES_MAX} minutes` });
+    for (const name of ["tools", "write_tools"]) {
+      if (Array.isArray(step[name]) && step[name].length > TOOLS_MAX) errors.push({ field: field(at, name), message: `${step[name].length} tools, over the ${TOOLS_MAX} the hub takes` });
+    }
+    (Array.isArray(step.write_tools) ? step.write_tools : []).forEach((tool, i) => {
+      if (!isObject(tool)) return;
+      errors.push(...unknownFields(tool, ["name", "class", "mode"], field(at, "write_tools", i)));
+      if (!TOOL_CLASSES.includes(tool.class)) errors.push({ field: field(at, "write_tools", i, "class"), message: `must be one of ${TOOL_CLASSES.map((c) => JSON.stringify(c)).join(", ")}` });
+    });
     (Array.isArray(step.write_tools) ? step.write_tools : []).forEach((tool, i) => {
       if (tool?.mode === "auto") errors.push({ field: field(at, "write_tools", i, "mode"), message: "a tool that writes comes in mode approve: the hub lowers auto to approve" });
     });
@@ -200,6 +245,7 @@ function stepErrors(step, at, keys) {
       errors.push({ field: field(at, "params", "destino", "conversa"), message: "a fixed conversation belongs to whoever exported: leave it out, for whoever installs to fill" });
     }
     errors.push(...namedCredentials(params, field(at, "params")));
+    if (isObject(step.for_each) && outside(step.for_each.max, 1, FOR_EACH_MAX)) errors.push({ field: field(at, "for_each", "max"), message: `use 1 to ${FOR_EACH_MAX} items` });
   }
   return errors;
 }
@@ -215,6 +261,9 @@ export function templateRules(item) {
   }
   if (definition !== undefined) {
     const at = "package.automation.definition";
+    if (typeof definition.description === "string" && bytes(definition.description) > DESCRIPTION_MAX_BYTES) {
+      errors.push({ field: field(at, "description"), message: `${bytes(definition.description)} bytes, over the ${DESCRIPTION_MAX_BYTES} bytes the hub takes` });
+    }
     if (typeof definition.voice_agent === "string" && definition.voice_agent.trim() !== "") {
       errors.push({ field: field(at, "voice_agent"), message: "the voice is an agent of whoever exported: leave it blank, for whoever installs to choose" });
     }
@@ -227,7 +276,9 @@ export function templateRules(item) {
     });
     steps.forEach((s, i) => errors.push(...stepErrors(s, field(at, "steps", i), keys)));
   }
-  for (const { at, text } of strings(pkg, "package")) {
+  for (const { at, text } of strings(pkg, "package")) errors.push(...hiddenText(text, at));
+  const texts = [...strings(item.name, "name"), ...strings(item.description, "description"), ...strings(item.tags, "tags"), ...strings(pkg, "package")];
+  for (const { at, text } of texts) {
     const why = privateText(text);
     if (why !== undefined) errors.push({ field: at, message: why });
   }
