@@ -23,6 +23,8 @@ O que o app faz com os itens de outro catálogo:
   Organização.
 - O id de um tipo de conexão que o catálogo oficial publica é dele: o app não
   instala esse id de outro catálogo. Escolha ids seus.
+- Um id de tipo de conexão que outro catálogo da Organização já instalou também é
+  recusado: fica quem chegou primeiro.
 
 ## 1. Copie o repositório
 
@@ -55,7 +57,12 @@ na pasta do repositório por engano.
 ```sh
 node -e '
 const { generateKeyPairSync } = require("node:crypto");
-const { writeFileSync } = require("node:fs");
+const { existsSync, writeFileSync } = require("node:fs");
+const found = ["index-signing.key", "index-signing.pub"].filter((file) => existsSync(file));
+if (found.length > 0) {
+  console.error(`${found.join(" and ")} already ${found.length > 1 ? "exist" : "exists"}: nothing was written`);
+  process.exit(1);
+}
 const { privateKey, publicKey } = generateKeyPairSync("ed25519");
 writeFileSync("index-signing.key", privateKey.export({ type: "pkcs8", format: "pem" }), { mode: 0o600, flag: "wx" });
 writeFileSync("index-signing.pub", publicKey.export({ type: "spki", format: "der" }).toString("base64") + "\n", { flag: "wx" });
@@ -66,9 +73,9 @@ Ficam dois arquivos. `index-signing.key` é a chave privada (Ed25519, PKCS8 PEM)
 que só você lê. `index-signing.pub` é a chave pública (SPKI DER em base64, uma
 linha), a que você entrega a quem vai usar o catálogo.
 
-O comando se recusa a sobrescrever: se um dos dois arquivos já está na pasta, ele
-para com um erro `EEXIST` e deixa esse arquivo como estava. Para gerar um par
-novo, use outra pasta.
+O comando se recusa a sobrescrever: ele confere os dois arquivos antes de gravar
+qualquer um. Se um deles já está na pasta, ele diz qual é e para sem gravar nada.
+Para gerar um par novo, use outra pasta.
 
 Antes de seguir, guarde uma cópia da chave privada num cofre de senhas. Quem perde
 a chave privada não publica mais atualizações que os apps aceitem. E trocar de
@@ -87,9 +94,13 @@ chave depois faz os itens já instalados pararem de atualizar.
    git grep -F "$velha"
    ```
 
-   O último comando não pode mostrar nada. Se uma ficar para trás, a esteira para
-   antes de publicar: logo depois de assinar, ela confere a assinatura com a
-   `PUBLIC_KEY`.
+   O último comando não pode mostrar nada. A chave velha que ficar em
+   `scripts/lib/signature.mjs`, em `keys/index-signing.pub` ou no
+   `test/signature.test.mjs` para a esteira antes de publicar: o `npm test` falha,
+   porque o `test/signature.test.mjs` confere que os três têm a mesma chave. Uma
+   `PUBLIC_KEY` velha também derruba a conferência da assinatura que vem logo
+   depois de assinar. A chave velha que ficar nos README não para nada: a
+   publicação sai normal, e o README só mostra a chave errada para quem lê.
 2. Os itens. Apague os arquivos de `connections/` e `templates/` e ponha os seus,
    com ids seus. O [CONTRIBUTING.pt-BR.md](../CONTRIBUTING.pt-BR.md) explica cada
    campo. O `retired.json` começa vazio (`{}`).
@@ -124,8 +135,10 @@ npm test
 
 ## 4. Guarde a chave privada na esteira
 
-1. No GitHub, em Settings, Environments, crie o environment `assinatura`, que é o
-   nome usado em `.github/workflows/publish.yml`.
+1. No GitHub, em Settings, Environments, crie ou abra o environment
+   `assinatura`, que é o nome usado em `.github/workflows/publish.yml`. O push do
+   passo 1 já rodou a esteira, e o GitHub cria o environment nessa primeira
+   execução.
 2. Em Deployment branches and tags, escolha Selected branches and tags e deixe só
    a `main`. Assim, só a publicação da `main` lê a chave.
 3. Ponha a chave privada como o segredo `INDEX_SIGNING_KEY` desse environment, com

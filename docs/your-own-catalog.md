@@ -22,6 +22,8 @@ What the app does with the items of another catalog:
   the Organization.
 - The id of a connection type the official catalog publishes belongs to it: the
   app does not install that id from another catalog. Pick ids of your own.
+- A connection type id that another catalog of the Organization already installed
+  is refused too: whoever came first keeps it.
 
 ## 1. Copy the repository
 
@@ -56,7 +58,12 @@ in the repository folder by mistake.
 ```sh
 node -e '
 const { generateKeyPairSync } = require("node:crypto");
-const { writeFileSync } = require("node:fs");
+const { existsSync, writeFileSync } = require("node:fs");
+const found = ["index-signing.key", "index-signing.pub"].filter((file) => existsSync(file));
+if (found.length > 0) {
+  console.error(`${found.join(" and ")} already ${found.length > 1 ? "exist" : "exists"}: nothing was written`);
+  process.exit(1);
+}
 const { privateKey, publicKey } = generateKeyPairSync("ed25519");
 writeFileSync("index-signing.key", privateKey.export({ type: "pkcs8", format: "pem" }), { mode: 0o600, flag: "wx" });
 writeFileSync("index-signing.pub", publicKey.export({ type: "spki", format: "der" }).toString("base64") + "\n", { flag: "wx" });
@@ -67,9 +74,9 @@ It leaves two files. `index-signing.key` is the private key (Ed25519, PKCS8 PEM)
 readable only by you. `index-signing.pub` is the public key (SPKI DER in base64,
 one line), the one you give to the people who will use the catalog.
 
-The command refuses to overwrite: if one of the two files is already in the
-folder, it stops with an `EEXIST` error and leaves that file as it was. To make a
-new pair, use another folder.
+The command refuses to overwrite: it checks the two files before it writes
+either. If one of them is already in the folder, it says which one and stops
+without writing anything. To make a new pair, use another folder.
 
 Before you go on, keep a copy of the private key in a password manager. Whoever
 loses the private key can no longer publish updates the apps accept. And changing
@@ -88,9 +95,14 @@ the key later makes the items already installed stop updating.
    git grep -F "$old"
    ```
 
-   The last command must print nothing. If one is left behind, the pipeline stops
-   before it publishes: right after signing, it checks the signature with
-   `PUBLIC_KEY`.
+   The last command must print nothing. The old key left in
+   `scripts/lib/signature.mjs`, in `keys/index-signing.pub` or in
+   `test/signature.test.mjs` stops the pipeline before it publishes: `npm test`
+   fails, because `test/signature.test.mjs` checks that the three hold the same
+   key. An old `PUBLIC_KEY` also fails the check of the signature that comes
+   right after signing. The old key left in the READMEs stops nothing: the
+   publication goes out, and the README only shows the wrong key to whoever reads
+   it.
 2. The items. Delete the files in `connections/` and `templates/` and add yours,
    with ids of your own. [CONTRIBUTING.md](../CONTRIBUTING.md) explains every
    field. `retired.json` starts empty (`{}`).
@@ -126,8 +138,10 @@ npm test
 
 ## 4. Keep the private key in the pipeline
 
-1. On GitHub, in Settings, Environments, create the `assinatura` environment,
-   which is the name `.github/workflows/publish.yml` uses.
+1. On GitHub, in Settings, Environments, create or open the `assinatura`
+   environment, which is the name `.github/workflows/publish.yml` uses. The push
+   of step 1 already ran the pipeline, and GitHub creates the environment on that
+   first run.
 2. In Deployment branches and tags, choose Selected branches and tags and leave
    only `main`. That way only the publication from `main` reads the key.
 3. Add the private key as the `INDEX_SIGNING_KEY` secret of that environment, the

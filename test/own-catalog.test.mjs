@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -82,11 +82,24 @@ test("run again in the same folder, the command of the guide refuses to overwrit
   const keys = keysFromGuide(t);
   const again = runKeyCommand(keys.dir);
   assert.notEqual(again.status, 0);
-  assert.match(again.stderr, /EEXIST/);
+  assert.match(again.stderr, /index-signing\.key and index-signing\.pub already exist/);
   assert.equal(readFileSync(keys.privateFile, "utf8"), keys.privatePem);
   assert.equal(readFileSync(join(keys.dir, "index-signing.pub"), "utf8").trim(), keys.publicBase64);
   assert.equal(statSync(keys.privateFile).mode & 0o777, 0o600);
 });
+
+for (const [present, absent] of [["index-signing.pub", "index-signing.key"], ["index-signing.key", "index-signing.pub"]]) {
+  test(`with only ${present} in the folder, the command of the guide stops before it writes ${absent}`, (t) => {
+    const dir = mkdtempSync(join(tmpdir(), "own-catalog-"));
+    t.after(() => rmSync(dir, { recursive: true, force: true }));
+    writeFileSync(join(dir, present), "kept\n");
+    const run = runKeyCommand(dir);
+    assert.notEqual(run.status, 0);
+    assert.match(run.stderr, new RegExp(`${present.replace(".", "\\.")} already exists`));
+    assert.deepEqual(readdirSync(dir), [present]);
+    assert.equal(readFileSync(join(dir, present), "utf8"), "kept\n");
+  });
+}
 
 test("the environment and the secret the guides tell to create are the ones the pipeline reads", () => {
   const workflow = readFileSync(join(root, ".github/workflows/publish.yml"), "utf8");
