@@ -1,0 +1,158 @@
+{
+  "kind": "template",
+  "id": "investigar-alerta",
+  "version": 1,
+  "name": {
+    "en": "Investigate an alert",
+    "pt-BR": "Investigar alerta"
+  },
+  "description": {
+    "en": "When a new alert is posted in a Teams channel you pick, looks into New Relic for what it points at, with read only tools and a short window (the last hour first, never more than 24 hours of logs), and writes what it found, with the evidence, as a new message in the same channel (not as a reply in the alert's thread). When the data does not explain the alert, nothing is posted. The message waits for your approval before it goes out. You pick the channels when installing.",
+    "pt-BR": "Quando um alerta novo aparece num canal do Teams que você escolher, investiga no New Relic o que ele aponta, só com ferramentas de leitura e janela curta (primeiro a última hora, nunca mais de 24 horas de log), e escreve o que achou, com a evidência, como mensagem nova no mesmo canal (não como resposta na conversa do alerta). Quando os dados não explicam o alerta, nada é postado. A mensagem espera a sua aprovação antes de sair. Os canais você escolhe ao instalar."
+  },
+  "tags": [
+    "alerts",
+    "new-relic",
+    "teams"
+  ],
+  "package": {
+    "format": "automation-package",
+    "version": 1,
+    "automation": {
+      "id": "investigar-alerta",
+      "name": "Investigate an alert",
+      "definition": {
+        "schema_version": 18,
+        "name": "Investigate an alert",
+        "description": "Quando um alerta novo aparece num canal do Teams que você escolher, investiga no New Relic, só com leitura e janela curta, e responde no mesmo canal com o que achou, depois da sua aprovação.",
+        "voice_agent": "",
+        "triggers": [
+          {
+            "kind": "teams_inbox",
+            "mentions": false,
+            "dms": false,
+            "pr_links": false,
+            "channel_threads": {
+              "new_threads": true
+            },
+            "ai_filter": {
+              "question": "Esta mensagem é um alerta que pede atenção agora, como erro, queda, lentidão, fila crescendo ou limite estourado? Conta como não: alerta que já se resolveu sozinho, aviso de rotina, teste de alerta e conversa entre pessoas."
+            }
+          }
+        ],
+        "steps": [
+          {
+            "key": "investigar",
+            "name": "Investigate in New Relic",
+            "kind": "model",
+            "model": "sonnet",
+            "max_turns": 20,
+            "timeout_minutes": 15,
+            "needs": [],
+            "optional": false,
+            "prompt": "Chegou um alerta novo num canal que você acompanha. Investigue no New Relic o que ele aponta e escreva a resposta que vai como mensagem nova no mesmo canal.\n\nRegras da investigação:\n- Só leitura. Use apenas as ferramentas do New Relic que você recebeu; nenhuma delas muda nada.\n- Comece pela última hora. Só aumente a janela se a última hora não explicar o alerta, e diga na resposta qual janela usou.\n- Em consulta a Log (NRQL em Log, get_log_statistics, list_recent_logs, analyze_entity_logs), nunca passe de 24 horas.\n- Toda consulta NRQL leva SINCE e LIMIT. Prefira contagem e agregação (count, percentile, FACET) a trazer linhas cruas.\n- Ache primeiro a entidade (serviço, host, monitor) que o alerta cita. Se a mensagem não disser qual é, procure pelo nome que ela traz; sem achar, diga isso e pare.\n- Olhe o que costuma explicar um alerta: issues abertas, golden metrics, erros (classe, mensagem, quando começou), mudanças e deploys recentes, e os logs de erro do período.\n- Pare quando tiver uma explicação com evidência ou quando não houver mais o que conferir. Poucas consultas certas valem mais que muitas.\n\nSaída:\n- text: a resposta no canal, curta, em Markdown simples. Primeira linha: o que está acontecendo, com o serviço afetado. Depois, em até cinco itens, a evidência que você viu, cada uma com o número e a janela de tempo. Se houver uma mudança ou deploy perto do início, diga qual e quando. Termine com o que não deu para conferir, se houver. Não invente causa nem impacto que os dados não mostram, e não copie dado pessoal que apareça nos logs.\n- found: true quando os dados explicam o alerta, false quando não explicam ou a entidade não foi encontrada.\n\nDe: {{event.author}}\n\nMensagem do alerta:\n{{event.text}}",
+            "tools": [
+              "new_relic__convert_time_period_to_epoch_ms",
+              "new_relic__list_available_new_relic_accounts",
+              "new_relic__get_entity",
+              "new_relic__search_entity_with_tag",
+              "new_relic__list_recent_issues",
+              "new_relic__search_incident",
+              "new_relic__list_alert_policies",
+              "new_relic__list_alert_conditions",
+              "new_relic__analyze_golden_metrics",
+              "new_relic__get_metric_statistics",
+              "new_relic__analyze_transactions",
+              "new_relic__get_error_statistics",
+              "new_relic__list_entity_error_groups",
+              "new_relic__search_errors",
+              "new_relic__list_change_events",
+              "new_relic__get_log_statistics",
+              "new_relic__list_recent_logs",
+              "new_relic__analyze_entity_logs",
+              "new_relic__execute_nrql_query"
+            ],
+            "output_schema": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "text",
+                "found"
+              ],
+              "properties": {
+                "text": {
+                  "type": "string"
+                },
+                "found": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          {
+            "against": "^true$",
+            "cases": [],
+            "compare": "matches",
+            "key": "achou",
+            "kind": "logic",
+            "name": "Found an explanation?",
+            "needs": [
+              "investigar"
+            ],
+            "op": "if",
+            "optional": false,
+            "value": "{{steps.investigar.found}}"
+          },
+          {
+            "key": "responder",
+            "name": "Reply in the channel",
+            "kind": "action",
+            "action": "teams.post",
+            "mode": "approve",
+            "needs": [
+              "achou",
+              "investigar"
+            ],
+            "optional": false,
+            "notify_when_queued": true,
+            "params": {
+              "text": "{{steps.investigar.text}}"
+            },
+            "pending_policy": "replace",
+            "target": "",
+            "when": {
+              "branch": "true",
+              "step": "achou"
+            }
+          }
+        ],
+        "limits": {
+          "per_run_micros": 1000000,
+          "per_day_micros": 10000000,
+          "max_minutes": 30,
+          "max_reruns_per_subject": 5,
+          "on_limit": "pause"
+        }
+      }
+    },
+    "agents": [],
+    "requirements": {
+      "connections": [
+        "new-relic"
+      ],
+      "apps": [
+        "teams"
+      ],
+      "servers": [
+        "ms365"
+      ],
+      "agents": [],
+      "to_fill": [
+        {
+          "path": "triggers[0]",
+          "field": "channels"
+        }
+      ]
+    }
+  }
+}
