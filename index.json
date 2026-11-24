@@ -1,8 +1,8 @@
 {
   "format": "app-marketplace-index",
   "version": 1,
-  "commit": "531054bece4e6a33f57ab189c64673bb7f0d823b",
-  "committedAt": 1795489028,
+  "commit": "083260a4dea28317505fe0ad18a1378607bc87ab",
+  "committedAt": 1795489161,
   "items": [
     {
       "kind": "template",
@@ -103,9 +103,9 @@
     {
       "kind": "template",
       "id": "revisar-prs-teams",
-      "version": 1,
+      "version": 2,
       "path": "templates/revisar-prs-teams.json",
-      "sha256": "bd6ca74c31dddb47f6b3849c66196ab6fe06980e8d91b62e7cf17a7fd9f8abe0",
+      "sha256": "83016756b13edcfca945bdbd72048c810a27a1bddb17d8f87c03d77395d9f5d6",
       "name": {
         "en": "Review PRs from Teams",
         "pt-BR": "Revisar PRs pelo Teams"
