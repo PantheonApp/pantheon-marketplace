@@ -7,8 +7,8 @@
     "pt-BR": "Revisar PRs pelo Slack"
   },
   "description": {
-    "en": "Reviews a pull request when its link is posted in a Slack channel, and again when the author pushes after your review asked for changes or commented. Waits for CI and turns an approval into a comment when CI is not green. Reacts once to the message with the verdict of all its PRs and posts a summary in the thread when verdicts differ, posting it again only when it changes. Every action that writes outside waits for your approval. You pick the channels and GitHub owner when installing.",
-    "pt-BR": "Revisa o pull request quando o link aparece num canal do Slack, e de novo quando o autor sobe commit depois de uma review sua que pediu mudança ou comentou. Espera a esteira e transforma a aprovação em comentário quando ela não está verde. Reage uma vez na mensagem com o veredito de todas as PRs dela e posta um resumo na thread quando os vereditos diferem, postando de novo só quando ele muda. Toda ação que escreve fora espera a sua aprovação. Os canais e o dono no GitHub você escolhe ao instalar."
+    "en": "Reviews a pull request when its link is posted in a Slack channel, and again when the author pushes after your review asked for changes or commented. Waits for CI and turns an approval into a comment when CI is not green. Reacts to the message with the verdict of all its PRs and posts a summary in the thread when verdicts differ. Every PR link in the channel starts a review, with no filter. Every action that writes outside waits for your approval. You pick the channels and GitHub owner when installing.",
+    "pt-BR": "Revisa o pull request quando o link aparece num canal do Slack, e de novo quando o autor sobe commit depois de uma review sua que pediu mudança ou comentou. Espera a esteira e troca a aprovação por comentário quando ela não está verde. Reage na mensagem com o veredito de todas as PRs dela e posta um resumo na thread quando os vereditos diferem. Todo link de PR no canal abre uma revisão, sem filtro. Toda ação que escreve fora espera a sua aprovação. Os canais e o dono no GitHub você escolhe ao instalar."
   },
   "tags": [
     "code-review",
@@ -162,20 +162,6 @@
             ]
           },
           {
-            "against": "^$",
-            "cases": [],
-            "compare": "matches",
-            "key": "origem",
-            "kind": "logic",
-            "name": "Channel or new commit?",
-            "needs": [
-              "revisar"
-            ],
-            "op": "if",
-            "optional": false,
-            "value": "{{event.slackTs}}"
-          },
-          {
             "action": "github.review_comment",
             "key": "publicar",
             "kind": "action",
@@ -183,38 +169,7 @@
             "name": "Publish the review on GitHub",
             "needs": [
               "revisar",
-              "esteira",
-              "origem"
-            ],
-            "optional": false,
-            "params": {
-              "ciFrom": "esteira",
-              "ciNotGreenText": "A esteira não estava verde ({{stateLabel}}), então a aprovação virou comentário. Falhou: {{failed}}. Pendente: {{pending}}.",
-              "findings": "{{steps.revisar.findings}}",
-              "ifCiNotGreen": "comment",
-              "owner": "{{event.owner}}",
-              "pull": "{{event.pull}}",
-              "repo": "{{event.repoName}}",
-              "summary": "{{steps.revisar.summary}}",
-              "verdict": "{{steps.revisar.verdict}}"
-            },
-            "pending_policy": "replace",
-            "target": "",
-            "when": {
-              "branch": "true",
-              "step": "origem"
-            }
-          },
-          {
-            "action": "github.review_comment",
-            "key": "publicar_fila",
-            "kind": "action",
-            "mode": "approve",
-            "name": "Publish the review on GitHub (queue)",
-            "needs": [
-              "revisar",
-              "esteira",
-              "origem"
+              "esteira"
             ],
             "notify_when_queued": true,
             "optional": false,
@@ -230,20 +185,16 @@
               "verdict": "{{steps.revisar.verdict}}"
             },
             "pending_policy": "replace",
-            "target": "",
-            "when": {
-              "branch": "false",
-              "step": "origem"
-            }
+            "target": ""
           },
           {
             "action": "slack.react",
-            "key": "veredito_fila",
+            "key": "veredito",
             "kind": "action",
             "mode": "approve",
             "name": "React with the verdict",
             "needs": [
-              "publicar_fila"
+              "publicar"
             ],
             "optional": true,
             "params": {
@@ -258,7 +209,7 @@
                 "✅"
               ],
               "porValor": {
-                "de": "{{steps.publicar_fila.verdict}}",
+                "de": "{{steps.publicar.verdict}}",
                 "mapa": {
                   "APPROVE": "✅",
                   "COMMENT": "💬",
@@ -286,7 +237,7 @@
             "mode": "approve",
             "name": "Summary in the thread",
             "needs": [
-              "publicar"
+              "veredito"
             ],
             "optional": true,
             "params": {
@@ -313,44 +264,6 @@
               "line": "{{repo}}#{{number}} {{emoji}} {{label}}",
               "onlyWhenMixed": true,
               "valor": "{{steps.publicar.verdict}}"
-            },
-            "pending_policy": "replace",
-            "target": ""
-          },
-          {
-            "action": "slack.thread-summary",
-            "key": "resumo_fila",
-            "kind": "action",
-            "mode": "approve",
-            "name": "Summary in the thread (queue)",
-            "needs": [
-              "veredito_fila"
-            ],
-            "optional": true,
-            "params": {
-              "alvo": "origem-do-pr",
-              "header": "",
-              "labels": {
-                "APPROVE": {
-                  "emoji": "✅",
-                  "label": "aprovado"
-                },
-                "COMMENT": {
-                  "emoji": "💬",
-                  "label": "comentado"
-                },
-                "REQUEST_CHANGES": {
-                  "emoji": "⚠️",
-                  "label": "pediu mudanças"
-                },
-                "semValor": {
-                  "emoji": "❌",
-                  "label": "falhou"
-                }
-              },
-              "line": "{{repo}}#{{number}} {{emoji}} {{label}}",
-              "onlyWhenMixed": true,
-              "valor": "{{steps.publicar_fila.verdict}}"
             },
             "pending_policy": "replace",
             "target": ""
