@@ -13,7 +13,7 @@ const github = () => JSON.parse(readFileSync(join(root, "connections/github.json
 test("the catalog in the repository is valid: the connection types and the templates, and no package yet", async () => {
   const { items, errors } = await validateCatalog(root);
   assert.deepEqual(errors, []);
-  assert.deepEqual(items.map((i) => `${i.kind}:${i.id}`), ["connection:github", "template:alertas-do-canal", "template:responder-thread-de-review", "template:revisar-prs-teams"]);
+  assert.deepEqual(items.map((i) => `${i.kind}:${i.id}`), ["connection:github", "template:alertas-do-canal", "template:responder-thread-de-review", "template:revisar-prs-slack", "template:revisar-prs-teams"]);
 });
 
 test("the CLI with no arguments validates the whole catalog and exits zero", () => {

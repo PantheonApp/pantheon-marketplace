@@ -46,7 +46,7 @@ test("the index has what the hub reads: format, version 1, commit, committedAt, 
   assert.equal(index.committedAt, 1792000000);
   assert.deepEqual(Object.keys(index), ["format", "version", "commit", "committedAt", "items", "retired"]);
   assert.deepEqual(index.retired, {});
-  assert.deepEqual(index.items.map((i) => `${i.kind}:${i.id}`), ["template:alertas-do-canal", "connection:github", "template:responder-thread-de-review", "template:revisar-prs-teams"]);
+  assert.deepEqual(index.items.map((i) => `${i.kind}:${i.id}`), ["template:alertas-do-canal", "connection:github", "template:responder-thread-de-review", "template:revisar-prs-slack", "template:revisar-prs-teams"]);
   for (const entry of index.items) {
     const bytes = readFileSync(join(root, entry.path));
     assert.equal(entry.path, `${entry.kind}s/${entry.id}.json`);
