@@ -1,0 +1,68 @@
+{
+  "kind": "connection",
+  "id": "new-relic",
+  "version": 1,
+  "name": {
+    "en": "New Relic",
+    "pt-BR": "New Relic"
+  },
+  "description": {
+    "en": "New Relic's remote MCP server, with a User API key (it starts with NRAK-) that the hub keeps in its vault and sends in the Api-Key header. Only tools that read are listed, and an API key does not reach the AI analysis and preview tools, which ask for OAuth. US region only: an account in the EU region uses another address, which this type does not cover.",
+    "pt-BR": "Servidor MCP remoto do New Relic, com uma User API key (começa com NRAK-) que o hub guarda no cofre e manda no cabeçalho Api-Key. Só entram as ferramentas que leem, e a API key não alcança as ferramentas de análise por IA e as de prévia, que pedem OAuth. Só a região dos EUA: conta na região da UE usa outro endereço, que este tipo não cobre."
+  },
+  "manifest": {
+    "category": "observability",
+    "logo": null,
+    "color": "1CE783",
+    "runs_on": ["hub"],
+    "methods": [
+      {
+        "type": "token",
+        "header": "Api-Key"
+      }
+    ],
+    "servers": {
+      "remote": {
+        "url": "https://mcp.newrelic.com/mcp/"
+      }
+    },
+    "hosts": ["mcp.newrelic.com"],
+    "tools": [
+      { "name": "convert_time_period_to_epoch_ms", "read_only": true },
+      { "name": "get_dashboard", "read_only": true },
+      { "name": "get_entity", "read_only": true },
+      { "name": "list_related_entities", "read_only": true },
+      { "name": "list_available_new_relic_accounts", "read_only": true },
+      { "name": "list_dashboards", "read_only": true },
+      { "name": "search_entity_with_tag", "read_only": true },
+      { "name": "list_metric_names", "read_only": true },
+      { "name": "analyze_kafka_related_entities", "read_only": true },
+      { "name": "get_retention_policy_and_namespaces", "read_only": true },
+      { "name": "get_user_id", "read_only": true },
+      { "name": "execute_nrql_query", "read_only": true },
+      { "name": "list_alert_conditions", "read_only": true },
+      { "name": "search_incident", "read_only": true },
+      { "name": "list_alert_policies", "read_only": true },
+      { "name": "list_recent_issues", "read_only": true },
+      { "name": "list_synthetic_monitors", "read_only": true },
+      { "name": "list_synthetic_monitor_results", "read_only": true },
+      { "name": "get_synthetic_check_statistics", "read_only": true },
+      { "name": "list_entity_error_groups", "read_only": true },
+      { "name": "list_change_events", "read_only": true },
+      { "name": "get_error_statistics", "read_only": true },
+      { "name": "search_errors", "read_only": true },
+      { "name": "analyze_entity_logs", "read_only": true },
+      { "name": "analyze_golden_metrics", "read_only": true },
+      { "name": "analyze_threads", "read_only": true },
+      { "name": "analyze_transactions", "read_only": true },
+      { "name": "list_garbage_collection_metrics", "read_only": true },
+      { "name": "list_recent_logs", "read_only": true },
+      { "name": "list_entity_performance_risk_groups", "read_only": true },
+      { "name": "get_metric_statistics", "read_only": true },
+      { "name": "get_log_statistics", "read_only": true },
+      { "name": "get_distributed_trace_details", "read_only": true },
+      { "name": "analyze_kafka_health", "read_only": true },
+      { "name": "analyze_kafka_client_metrics", "read_only": true }
+    ]
+  }
+}
