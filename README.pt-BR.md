@@ -81,6 +81,9 @@ MCowBQYDK2VwAyEAVDPQ3V7UnUkEVn+wer6sHmDEldnGR3FTbSbzXI8Q7pc=
 A chave privada fica no segredo `INDEX_SIGNING_KEY` do environment
 `assinatura`, e só o job que assina a lê.
 
+Para publicar um catálogo seu, assinado com a sua chave, veja o
+[docs/your-own-catalog.pt-BR.md](docs/your-own-catalog.pt-BR.md).
+
 ## Rodar local
 
 Precisa do Node 22 ou mais novo.

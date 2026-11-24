@@ -14,6 +14,8 @@ npm test
 terms lives only on the maintainers' machines and the pipeline skips it: the
 reviewer of the pull request checks it.
 
+To make a catalog of your own instead, see [docs/your-own-catalog.md](docs/your-own-catalog.md).
+
 ## Rules for every item
 
 - The file is `connections/<id>.json` or `templates/<id>.json`, and the `id` equals the file name, in

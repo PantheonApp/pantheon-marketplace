@@ -85,6 +85,9 @@ MCowBQYDK2VwAyEAVDPQ3V7UnUkEVn+wer6sHmDEldnGR3FTbSbzXI8Q7pc=
 The private key lives in the `INDEX_SIGNING_KEY` secret of the `assinatura`
 environment, and only the job that signs reads it.
 
+To publish a catalog of your own, signed with your own key, see
+[docs/your-own-catalog.md](docs/your-own-catalog.md).
+
 ## Run it locally
 
 It needs Node 22 or newer.

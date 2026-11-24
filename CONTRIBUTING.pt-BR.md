@@ -14,6 +14,8 @@ O `validate` diz o arquivo e o campo de cada erro. A lista de termos proibidos
 só existe na máquina de quem mantém e a esteira a pula: quem revisa o PR é que
 confere.
 
+Para criar um catálogo seu, veja o [docs/your-own-catalog.pt-BR.md](docs/your-own-catalog.pt-BR.md).
+
 ## Regras de todo item
 
 - O arquivo fica em `connections/<id>.json` ou `templates/<id>.json`, e o `id` é igual ao nome do
