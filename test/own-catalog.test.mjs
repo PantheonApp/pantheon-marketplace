@@ -13,7 +13,6 @@ import { PUBLIC_KEY, signIndex, verifyIndex } from "../scripts/lib/signature.mjs
 const root = fileURLToPath(new URL("..", import.meta.url));
 const AT = { commit: "0123456789abcdef0123456789abcdef01234567", committedAt: 1792000000 };
 const GUIDES = ["docs/your-own-catalog.md", "docs/your-own-catalog.pt-BR.md"];
-const OFFICIAL = join(root, "test/fixtures/official-index");
 
 /** The shell block of a guide that makes the key pair. */
 function keyCommand(guide) {
@@ -23,12 +22,17 @@ function keyCommand(guide) {
   return found[0];
 }
 
+/** Runs the command of the guide in a folder. */
+function runKeyCommand(dir) {
+  const path = `${dirname(process.execPath)}:${process.env.PATH ?? ""}`;
+  return spawnSync("sh", ["-c", keyCommand(GUIDES[0])], { cwd: dir, encoding: "utf8", env: { ...process.env, PATH: path } });
+}
+
 /** Runs the command of the guide in a new folder and reads the pair it leaves there. */
 function keysFromGuide(t) {
   const dir = mkdtempSync(join(tmpdir(), "own-catalog-"));
   t.after(() => rmSync(dir, { recursive: true, force: true }));
-  const path = `${dirname(process.execPath)}:${process.env.PATH ?? ""}`;
-  const run = spawnSync("sh", ["-c", keyCommand(GUIDES[0])], { cwd: dir, encoding: "utf8", env: { ...process.env, PATH: path } });
+  const run = runKeyCommand(dir);
   assert.equal(run.status, 0, run.stderr);
   return {
     dir,
@@ -74,10 +78,23 @@ test("the CLIs sign with the new key in INDEX_SIGNING_KEY and verify it with --p
   assert.match(official.stderr, /does not match/);
 });
 
-test("the index the official catalog published verifies only with the key that signed it, not with a new one", (t) => {
+test("run again in the same folder, the command of the guide refuses to overwrite the pair", (t) => {
   const keys = keysFromGuide(t);
-  const index = readFileSync(join(OFFICIAL, "index.json"));
-  const signature = readFileSync(join(OFFICIAL, "index.json.sig"), "utf8");
-  assert.equal(verifyIndex(index, signature, readFileSync(join(OFFICIAL, "index-signing.pub"), "utf8").trim()), true);
-  assert.equal(verifyIndex(index, signature, keys.publicBase64), false);
+  const again = runKeyCommand(keys.dir);
+  assert.notEqual(again.status, 0);
+  assert.match(again.stderr, /EEXIST/);
+  assert.equal(readFileSync(keys.privateFile, "utf8"), keys.privatePem);
+  assert.equal(readFileSync(join(keys.dir, "index-signing.pub"), "utf8").trim(), keys.publicBase64);
+  assert.equal(statSync(keys.privateFile).mode & 0o777, 0o600);
+});
+
+test("the environment and the secret the guides tell to create are the ones the pipeline reads", () => {
+  const workflow = readFileSync(join(root, ".github/workflows/publish.yml"), "utf8");
+  for (const guide of GUIDES) {
+    const command = readFileSync(join(root, guide), "utf8").match(/gh secret set (\S+) --env (\S+)/);
+    assert.ok(command, `${guide} tells how to set the secret`);
+    const [, secret, environment] = command;
+    assert.match(workflow, new RegExp(`^\\s+environment: ${environment}$`, "m"), `${guide}: environment ${environment}`);
+    assert.ok(workflow.includes(`\${{ secrets.${secret} }}`), `${guide}: secret ${secret}`);
+  }
 });
