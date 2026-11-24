@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -108,13 +108,34 @@ test("a direct push is checked against the commit before it", () => {
   assert.match(errors[0].message, /must go up from 1/);
 });
 
+/** The JSON files of a catalog folder; none when the folder is not there, as validateCatalog reads it. */
+function jsonFiles(folder) {
+  try {
+    return readdirSync(folder).filter((name) => name.endsWith(".json")).sort();
+  } catch (error) {
+    if (error.code === "ENOENT") return [];
+    throw error;
+  }
+}
+
+/** The first item of this repository, whatever it is, with its path. */
+function firstItem() {
+  for (const folder of ["connections", "templates"]) {
+    const [name] = jsonFiles(join(root, folder));
+    if (name !== undefined) return { path: `${folder}/${name}`, ...JSON.parse(readFileSync(join(root, folder, name), "utf8")) };
+  }
+  throw new Error("the repository has no item in connections/ or templates/");
+}
+
 test("the CLI compares with the published index it is given", () => {
+  const item = firstItem();
+  const published = item.version + 8;
   const dir = mkdtempSync(join(tmpdir(), "published-"));
   const file = join(dir, "index.json");
-  writeFileSync(file, JSON.stringify({ format: "app-marketplace-index", version: 1, items: [entry("github", 9)] }));
+  writeFileSync(file, JSON.stringify({ format: "app-marketplace-index", version: 1, items: [entry(item.id, published, "a".repeat(64), item.kind)] }));
   const run = spawnSync(process.execPath, ["scripts/check-versions.mjs", "--base", "HEAD", "--published", file], { cwd: root, encoding: "utf8" });
   assert.equal(run.status, 1);
-  assert.match(run.stderr, /connections\/github\.json: version: published at version 9/);
+  assert.ok(run.stderr.includes(`${item.path}: version: published at version ${published}`), run.stderr);
 });
 
 test("retired.json only grows: no key leaves and no number goes down", () => {
