@@ -68,7 +68,7 @@
             {
               "key": "post",
               "kind": "action",
-              "action": "slack.thread-summary",
+              "action": "context.update",
               "mode": "approve",
               "needs": [
                 "summary"

@@ -139,7 +139,7 @@ for (const [what, change, field, pattern] of [
   ["two steps with the same key", (i, d) => (d.steps[1].key = "summary"), `${D}.steps.1.key`, /already/],
   ["a step that needs one that is not there", (i, d) => (d.steps[1].needs = ["nothing"]), `${D}.steps.1.needs`, /nothing/],
   ["an action the hub does not know", (i, d) => (d.steps[1].action = "shell.run"), `${D}.steps.1.action`, /does not know/],
-  ["an action the engine does not run", (i, d) => d.steps.push({ ...post({}), action: "slack.thread-summary" }), `${D}.steps.2.action`, /does not run/],
+  ["an action the engine does not run", (i, d) => d.steps.push({ ...post({}), action: "context.update" }), `${D}.steps.2.action`, /does not run/],
   ["an action that writes outside in auto", (i, d) => d.steps.push(post({}, { mode: "auto" })), `${D}.steps.2.mode`, /approve/],
   ["a tool that writes in auto", (i, d) => (d.steps[0].write_tools = [{ name: "github__create_issue", class: "external_write", mode: "auto" }]), `${D}.steps.0.write_tools.0.mode`, /approve/],
   ["a mode the hub does not know", (i, d) => (d.steps[1].mode = "sometimes"), `${D}.steps.1.mode`, /draft/],
@@ -154,6 +154,12 @@ test("an action that only reads or stays in the app runs in auto, and every acti
   const wait = { key: "wait", kind: "action", action: "github.checks_wait", mode: "auto", params: {} };
   assert.deepEqual(await check(variant((i, d) => d.steps.push(wait))), []);
   assert.deepEqual(await check(variant((i, d) => d.steps.push(post({})))), []);
+});
+
+test("the Slack reaction joined by message and the summary in the Slack thread run, as the Teams ones", async () => {
+  const react = { ...post({}), key: "react", action: "slack.react", params: { juntarPorMensagem: true, ordem: ["⚠️", "✅"], semValor: "⚠️", andamento: "👀" } };
+  const summary = { ...post({}), key: "thread", action: "slack.thread-summary", params: { valor: "{{steps.summary.text}}" } };
+  assert.deepEqual(await check(variant((i, d) => d.steps.push(react, summary))), []);
 });
 
 test("a marker stands for what whoever installs fills, so it is not a credential", async () => {

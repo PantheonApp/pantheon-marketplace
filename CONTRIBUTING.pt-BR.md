@@ -143,8 +143,8 @@ em ação que lê ou fica no app (`github.checks_wait`, `digest.deliver`,
   aprovação.
 
 O mesmo vale para `write_tools` de um passo de modelo: ferramenta que escreve
-vem em `approve`. `context.update` e `slack.thread-summary` são recusadas em
-qualquer modo, porque o motor não as executa.
+vem em `approve`. `context.update` é recusada em qualquer modo, porque o motor
+não a executa.
 
 O que um modelo nunca leva, e a esteira recusa apontando o campo:
 
