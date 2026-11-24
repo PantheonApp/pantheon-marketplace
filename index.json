@@ -1,8 +1,8 @@
 {
   "format": "app-marketplace-index",
   "version": 1,
-  "commit": "cf3113895cfbe06a06c81b3e7d025e526d182268",
-  "committedAt": 1795533006,
+  "commit": "a1c8f3c21d30d7386bfb50d7f28a98dc31d4219a",
+  "committedAt": 1795542959,
   "items": [
     {
       "kind": "template",
@@ -60,6 +60,83 @@
         "actions": []
       },
       "official": true
+    },
+    {
+      "kind": "template",
+      "id": "investigar-alerta",
+      "version": 1,
+      "path": "templates/investigar-alerta.json",
+      "sha256": "c16029dc759d681ee4f73562fd5702bcccdf5b56a5d623e3cc5b2ef55ddc30e6",
+      "name": {
+        "en": "Investigate an alert",
+        "pt-BR": "Investigar alerta"
+      },
+      "description": {
+        "en": "When a new alert is posted in a Teams channel you pick, looks into New Relic for what it points at, with read only tools and a short window (the last hour first, never more than 24 hours of logs), and writes what it found, with the evidence, as a new message in the same channel (not as a reply in the alert's thread). When the data does not explain the alert, nothing is posted. The message waits for your approval before it goes out. You pick the channels when installing.",
+        "pt-BR": "Quando um alerta novo aparece num canal do Teams que você escolher, investiga no New Relic o que ele aponta, só com ferramentas de leitura e janela curta (primeiro a última hora, nunca mais de 24 horas de log), e escreve o que achou, com a evidência, como mensagem nova no mesmo canal (não como resposta na conversa do alerta). Quando os dados não explicam o alerta, nada é postado. A mensagem espera a sua aprovação antes de sair. Os canais você escolhe ao instalar."
+      },
+      "tags": [
+        "alerts",
+        "new-relic",
+        "teams"
+      ]
+    },
+    {
+      "kind": "connection",
+      "id": "new-relic",
+      "version": 1,
+      "path": "connections/new-relic.json",
+      "sha256": "3b4a6f7afec474e1611f6d1d2187f37f6dba5b5dea2e19c40f53a4f79f2538be",
+      "name": {
+        "en": "New Relic",
+        "pt-BR": "New Relic"
+      },
+      "description": {
+        "en": "New Relic's remote MCP server, with a User API key (it starts with NRAK-) that the hub keeps in its vault and sends in the Api-Key header. Only tools that read are listed, and an API key does not reach the AI analysis and preview tools, which ask for OAuth. US region only: an account in the EU region uses another address, which this type does not cover.",
+        "pt-BR": "Servidor MCP remoto do New Relic, com uma User API key (começa com NRAK-) que o hub guarda no cofre e manda no cabeçalho Api-Key. Só entram as ferramentas que leem, e a API key não alcança as ferramentas de análise por IA e as de prévia, que pedem OAuth. Só a região dos EUA: conta na região da UE usa outro endereço, que este tipo não cobre."
+      },
+      "tags": [],
+      "requires": {
+        "runsOn": [
+          "hub"
+        ],
+        "servers": {
+          "remote": {
+            "url": "https://mcp.newrelic.com/mcp/"
+          }
+        },
+        "hosts": [
+          "mcp.newrelic.com"
+        ],
+        "methods": [
+          {
+            "type": "token"
+          }
+        ],
+        "fields": [],
+        "triggers": [],
+        "actions": []
+      },
+      "official": true
+    },
+    {
+      "kind": "template",
+      "id": "preparo-review-semanal",
+      "version": 1,
+      "path": "templates/preparo-review-semanal.json",
+      "sha256": "be53d0fd6fb5ccd0bae6cafbfe8742a4986abe1a3bb9a76bb8f4329730b06390",
+      "name": {
+        "en": "Weekly review prep",
+        "pt-BR": "Preparo da review semanal"
+      },
+      "description": {
+        "en": "Every Monday morning, gathers the open pull requests where your review was requested on GitHub, with read only access, and leaves you a short list in the app: what waits, who opened it and for how long. Nothing is written outside.",
+        "pt-BR": "Toda segunda de manhã, junta os pull requests abertos em que pediram a sua review no GitHub, só com leitura, e deixa para você uma lista curta no app: o que espera, quem abriu e há quanto tempo. Nada é escrito fora."
+      },
+      "tags": [
+        "code-review",
+        "github"
+      ]
     },
     {
       "kind": "template",
