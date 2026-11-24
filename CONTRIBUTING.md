@@ -147,8 +147,8 @@ only on actions that read or stay in the app (`github.checks_wait`,
   approval.
 
 The same goes for `write_tools` of a model step: a tool that writes comes in
-`approve`. `context.update` and `slack.thread-summary` are refused in any mode,
-because the engine does not run them.
+`approve`. `context.update` is refused in any mode, because the engine does not
+run it.
 
 What a template never carries, and the pipeline refuses with the field:
 

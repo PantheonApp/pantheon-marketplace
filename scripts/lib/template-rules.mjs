@@ -44,7 +44,7 @@ const ACTIONS = new Map(
     ["teams.post", "outside", true],
     ["slack.react", "outside", true],
     ["teams.react", "outside", true],
-    ["slack.thread-summary", "outside", false],
+    ["slack.thread-summary", "outside", true],
     ["teams.thread-summary", "outside", true],
     ["http.request", "outside", true],
     ["mcp.call", "by_tool", true],
