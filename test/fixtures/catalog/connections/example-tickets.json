@@ -1,0 +1,31 @@
+{
+  "kind": "connection",
+  "id": "example-tickets",
+  "version": 1,
+  "name": {
+    "en": "Example Tickets",
+    "pt-BR": "Chamados de Exemplo"
+  },
+  "description": {
+    "en": "An example connection type for the tests, with a token that the hub keeps in its vault.",
+    "pt-BR": "Um tipo de conexão de exemplo para os testes, com um token que o hub guarda no cofre."
+  },
+  "manifest": {
+    "category": "dev",
+    "logo": null,
+    "color": "334455",
+    "runs_on": ["hub"],
+    "methods": [
+      {
+        "type": "token",
+        "header": "Authorization"
+      }
+    ],
+    "servers": {
+      "remote": {
+        "url": "https://mcp.tickets.example.com/mcp/"
+      }
+    },
+    "hosts": ["mcp.tickets.example.com"]
+  }
+}

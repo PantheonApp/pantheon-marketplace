@@ -118,11 +118,11 @@ the key later makes the items already installed stop updating.
    `validate` checks that the list of official types has the same accounts as
    CODEOWNERS itself.
 5. Both READMEs: the name of the catalog and the address of the index.
-6. The tests. The ones in `test/` use the official items and accounts as examples,
-   and the pipeline runs `npm test` before it publishes. Once you change the
-   items, `npm test` points out the ones that depend on them (today in
-   `test/index.test.mjs`, `test/validate.test.mjs`, `test/versions.test.mjs` and
-   `test/codeowners.test.mjs`): adjust each one to your items and your accounts.
+6. The tests stay as they are, apart from the key in `test/signature.test.mjs`
+   from item 1. The ones in `test/` use examples of their own, in
+   `test/fixtures/`, and check whatever items and accounts your repository holds.
+   Changing the items and the owners is enough for `npm test` to pass, and the
+   pipeline runs `npm test` before it publishes.
 7. If you want a list of terms that must not reach the repository (a client's
    name, a person's), put one per line in
    `~/.config/app-marketplace/forbidden-terms`, or at the path in

@@ -115,11 +115,11 @@ chave depois faz os itens já instalados pararem de atualizar.
    `validate` confere que a lista de tipos oficiais tem as mesmas contas que o
    próprio CODEOWNERS.
 5. Os dois README: o nome do catálogo e o endereço do índice.
-6. Os testes. Os de `test/` usam os itens e as contas do oficial como exemplo, e a
-   esteira roda `npm test` antes de publicar. Depois de trocar os itens, o
-   `npm test` aponta os que dependem deles (hoje em `test/index.test.mjs`,
-   `test/validate.test.mjs`, `test/versions.test.mjs` e
-   `test/codeowners.test.mjs`): ajuste cada um para os seus itens e as suas contas.
+6. Os testes ficam como estão, fora a chave do `test/signature.test.mjs` do item 1.
+   Os de `test/` usam exemplos próprios, em `test/fixtures/`, e conferem os itens
+   e as contas que o seu repositório tiver, sejam quais forem. Trocar os itens e os
+   donos basta para o `npm test` passar, e a esteira roda o `npm test` antes de
+   publicar.
 7. Se quiser uma lista de termos que não podem entrar no repositório (nome de
    cliente, de pessoa), ponha um por linha em
    `~/.config/app-marketplace/forbidden-terms`, ou no caminho de
