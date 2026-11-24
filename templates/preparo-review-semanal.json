@@ -1,0 +1,118 @@
+{
+  "kind": "template",
+  "id": "preparo-review-semanal",
+  "version": 1,
+  "name": {
+    "en": "Weekly review prep",
+    "pt-BR": "Preparo da review semanal"
+  },
+  "description": {
+    "en": "Every Monday morning, gathers the open pull requests where your review was requested on GitHub, with read only access, and leaves you a short list in the app: what waits, who opened it and for how long. Nothing is written outside.",
+    "pt-BR": "Toda segunda de manhã, junta os pull requests abertos em que pediram a sua review no GitHub, só com leitura, e deixa para você uma lista curta no app: o que espera, quem abriu e há quanto tempo. Nada é escrito fora."
+  },
+  "tags": [
+    "code-review",
+    "github"
+  ],
+  "package": {
+    "format": "automation-package",
+    "version": 1,
+    "automation": {
+      "id": "preparo-review-semanal",
+      "name": "Weekly review prep",
+      "definition": {
+        "schema_version": 18,
+        "name": "Weekly review prep",
+        "description": "Toda segunda de manhã, junta os pull requests abertos em que pediram a sua review no GitHub e deixa uma lista curta no app. Nada é escrito fora.",
+        "voice_agent": "",
+        "triggers": [
+          {
+            "kind": "cron",
+            "expression": "0 9 * * 1"
+          }
+        ],
+        "steps": [
+          {
+            "key": "levantar",
+            "name": "Gather the review requests",
+            "kind": "model",
+            "model": "haiku",
+            "max_turns": 6,
+            "needs": [],
+            "optional": false,
+            "prompt": "Prepare o resumo da semana dos pull requests que esperam a sua review.\n\nUse só a ferramenta de busca do GitHub que você recebeu, que só lê. Busque os pull requests abertos em que a sua review foi pedida, com a consulta: is:open is:pr review-requested:@me archived:false. Se vier mais de uma página, leia até 50 pull requests no total.\n\nSaída:\n- headline: uma linha com quantos pull requests esperam a sua review. Sem nenhum, diga só isso.\n- items: um por pull request, do que espera há mais tempo para o mais novo.\n  - title: repositório#número e o título do pull request.\n  - summary: uma frase com o autor, há quantos dias a review foi pedida ou o pull request foi aberto, e se é rascunho. Não opine sobre o código.\n  - url: o endereço do pull request.\n\nNão invente pull request nem dado que a busca não trouxe.",
+            "tools": [
+              "github__search_pull_requests"
+            ],
+            "output_schema": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "headline",
+                "items"
+              ],
+              "properties": {
+                "headline": {
+                  "type": "string"
+                },
+                "items": {
+                  "type": "array",
+                  "maxItems": 50,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "title",
+                      "summary",
+                      "url"
+                    ],
+                    "properties": {
+                      "title": {
+                        "type": "string"
+                      },
+                      "summary": {
+                        "type": "string"
+                      },
+                      "url": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "key": "entregar",
+            "name": "Deliver the summary",
+            "kind": "action",
+            "action": "digest.deliver",
+            "mode": "auto",
+            "needs": [
+              "levantar"
+            ],
+            "optional": false,
+            "params": {}
+          }
+        ],
+        "limits": {
+          "per_run_micros": 200000,
+          "per_day_micros": 1000000,
+          "max_minutes": 30,
+          "max_reruns_per_subject": 3,
+          "on_limit": "pause"
+        }
+      }
+    },
+    "agents": [],
+    "requirements": {
+      "connections": [
+        "github"
+      ],
+      "apps": [],
+      "servers": [],
+      "agents": [],
+      "to_fill": []
+    }
+  }
+}

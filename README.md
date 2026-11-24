@@ -9,14 +9,14 @@ organization installs on its hub with one click. Anyone can propose an item with
 
 - `connections/`: connection types. Each one says where it runs, how a person
   signs in (OAuth, token, CLI or none), which remote MCP server it talks to and
-  what it unlocks. Today: GitHub.
+  what it unlocks. Today: GitHub, New Relic.
 - `templates/`: automation templates. Each one wraps the automation package the
   hub exports (`automation-package`, version 1): the definition of the
   automation and the agents its steps name. Once the hub's install from the
   catalog lands, installing one will make a proposal on the hub, which the
   person reviews before saving. The voice of a template is blank on purpose:
   the hub fills in the voice of whoever installs before it checks. Today: review PRs from Teams,
-  reply in review threads, channel alerts.
+  reply in review threads, channel alerts, investigate an alert, weekly review prep.
 - `packages/`: takes no item yet, and the pipeline refuses a file in it.
 
 Each item is a JSON file at `<folder>/<id>.json`. The schemas are in
