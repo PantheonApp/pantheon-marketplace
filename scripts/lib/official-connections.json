@@ -8,6 +8,14 @@
       "names": [
         "GitHub"
       ]
+    },
+    "new-relic": {
+      "hosts": [
+        "mcp.newrelic.com"
+      ],
+      "names": [
+        "New Relic"
+      ]
     }
   }
 }
