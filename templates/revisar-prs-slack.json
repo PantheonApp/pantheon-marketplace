@@ -1,0 +1,319 @@
+{
+  "kind": "template",
+  "id": "revisar-prs-slack",
+  "version": 1,
+  "name": {
+    "en": "Review PRs from Slack",
+    "pt-BR": "Revisar PRs pelo Slack"
+  },
+  "description": {
+    "en": "Reviews a pull request when its link is posted in a Slack channel, and again when the author pushes after your review asked for changes or commented. Waits for CI and turns an approval into a comment when CI is not green. Reacts to the message with the verdict of all its PRs and posts a summary in the thread when verdicts differ. Every PR link in the channel starts a review, with no filter. Every action that writes outside waits for your approval. You pick the channels and GitHub owner when installing.",
+    "pt-BR": "Revisa o pull request quando o link aparece num canal do Slack, e de novo quando o autor sobe commit depois de uma review sua que pediu mudança ou comentou. Espera a esteira e troca a aprovação por comentário quando ela não está verde. Reage na mensagem com o veredito de todas as PRs dela e posta um resumo na thread quando os vereditos diferem. Todo link de PR no canal abre uma revisão, sem filtro. Toda ação que escreve fora espera a sua aprovação. Os canais e o dono no GitHub você escolhe ao instalar."
+  },
+  "tags": [
+    "code-review",
+    "github",
+    "slack"
+  ],
+  "package": {
+    "format": "automation-package",
+    "version": 1,
+    "automation": {
+      "id": "revisar-prs-slack",
+      "name": "Review PRs from Slack",
+      "definition": {
+        "schema_version": 18,
+        "name": "Review PRs from Slack",
+        "description": "Revisa o pull request quando alguém posta o link num canal do Slack, e de novo quando o autor sobe commit depois de uma review sua que pediu mudança ou comentou. Espera a esteira e transforma a aprovação em comentário quando ela não está verde. Reage uma vez na mensagem com o veredito de todas as PRs dela e, quando os vereditos diferem, posta um resumo na thread, que só sai de novo quando muda. Toda ação que escreve fora espera a sua aprovação.",
+        "voice_agent": "",
+        "triggers": [
+          {
+            "kind": "slack_channel",
+            "max_prs": 10
+          },
+          {
+            "authorship": "others",
+            "every_minutes": 10,
+            "include_drafts": false,
+            "kind": "github_poll",
+            "my_review": {
+              "include": "app",
+              "new_commits_since": true,
+              "state": "changes_requested"
+            },
+            "on": "new_head",
+            "repos": [],
+            "settle_minutes": 15
+          },
+          {
+            "authorship": "others",
+            "every_minutes": 10,
+            "include_drafts": false,
+            "kind": "github_poll",
+            "my_review": {
+              "include": "app",
+              "new_commits_since": true,
+              "state": "commented"
+            },
+            "on": "new_head",
+            "repos": [],
+            "settle_minutes": 15
+          }
+        ],
+        "steps": [
+          {
+            "action": "github.checks_wait",
+            "key": "esteira",
+            "kind": "action",
+            "mode": "auto",
+            "name": "Wait for CI",
+            "needs": [],
+            "optional": false,
+            "params": {
+              "count": "all",
+              "ignore": [],
+              "pollSeconds": 60,
+              "settleSeconds": 60,
+              "timeoutMin": 45
+            },
+            "pending_policy": "replace",
+            "target": ""
+          },
+          {
+            "key": "revisar",
+            "kind": "model",
+            "max_turns": 25,
+            "model": "opus",
+            "name": "Review the PR",
+            "needs": [],
+            "optional": false,
+            "output_schema": {
+              "additionalProperties": false,
+              "properties": {
+                "findings": {
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "category": {
+                        "type": "string"
+                      },
+                      "confidence": {
+                        "enum": [
+                          "high",
+                          "medium",
+                          "low"
+                        ],
+                        "type": "string"
+                      },
+                      "file": {
+                        "type": "string"
+                      },
+                      "fix": {
+                        "type": "string"
+                      },
+                      "line": {
+                        "minimum": 1,
+                        "type": "integer"
+                      },
+                      "problem": {
+                        "type": "string"
+                      },
+                      "severity": {
+                        "enum": [
+                          "critical",
+                          "high",
+                          "medium",
+                          "low"
+                        ],
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "severity",
+                      "problem"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                "summary": {
+                  "type": "string"
+                },
+                "verdict": {
+                  "enum": [
+                    "APPROVE",
+                    "REQUEST_CHANGES",
+                    "COMMENT"
+                  ],
+                  "type": "string"
+                }
+              },
+              "required": [
+                "summary",
+                "verdict",
+                "findings"
+              ],
+              "type": "object"
+            },
+            "prompt": "Revise o pull request {{event.repo}}#{{event.pull}}.\nProcure defeito real no diff abaixo, não estilo nem preferência.\n\nEm `verdict`: APPROVE se não há defeito a corrigir, REQUEST_CHANGES se há defeito que precisa ser corrigido antes do merge, COMMENT se só há observações.\n\nEm `findings`, cada defeito com arquivo e linha do diff (lado novo) quando der, severidade, o problema com a prova em uma ou duas frases e a correção em uma frase. Sem defeito, lista vazia.\n\nEm `summary`, o corpo da review no GitHub. Com APPROVE e findings vazio, escreva exatamente LGTM e nada mais. Nos outros casos, no máximo duas frases dizendo o que precisa mudar ou o que vale olhar. Não resuma o PR, não liste o que conferiu, não elogie, não abra com introdução.\n\nSegunda passada: se \"Sua review anterior\" abaixo não estiver vazia, este PR já foi revisado por você e recebeu commits depois. Confira ponto a ponto se o que você apontou foi resolvido, pelo diff desde a sua review e pelas conversas da review. Ponto não resolvido volta como finding. Tudo resolvido e nada de novo com defeito no diff desde a review: APPROVE. Não repita ponto já resolvido nem comente o que não mudou.\n\nSua review anterior:\n{{event.myLastReview}}\n\nConversas da review:\n{{event.reviewThreadsText}}\n\nDiff desde a sua review:\n{{event.diffSinceMyReview}}\n\nDe: {{event.author}}\n\nMensagem do Slack (vazia quando a revisão veio de commit novo):\n{{event.text}}\n\nTítulo: {{event.title}}\n\nDescrição:\n{{event.description}}\n\nDiff:\n{{event.diff}}",
+            "agent": "pr-review",
+            "tools": [
+              "github__get_file_contents"
+            ]
+          },
+          {
+            "action": "github.review_comment",
+            "key": "publicar",
+            "kind": "action",
+            "mode": "approve",
+            "name": "Publish the review on GitHub",
+            "needs": [
+              "revisar",
+              "esteira"
+            ],
+            "notify_when_queued": true,
+            "optional": false,
+            "params": {
+              "ciFrom": "esteira",
+              "ciNotGreenText": "A esteira não estava verde ({{stateLabel}}), então a aprovação virou comentário. Falhou: {{failed}}. Pendente: {{pending}}.",
+              "findings": "{{steps.revisar.findings}}",
+              "ifCiNotGreen": "comment",
+              "owner": "{{event.owner}}",
+              "pull": "{{event.pull}}",
+              "repo": "{{event.repoName}}",
+              "summary": "{{steps.revisar.summary}}",
+              "verdict": "{{steps.revisar.verdict}}"
+            },
+            "pending_policy": "replace",
+            "target": ""
+          },
+          {
+            "action": "slack.react",
+            "key": "veredito",
+            "kind": "action",
+            "mode": "approve",
+            "name": "React with the verdict",
+            "needs": [
+              "publicar"
+            ],
+            "optional": true,
+            "params": {
+              "andamento": "👀",
+              "juntarPorMensagem": true,
+              "mixed": "🧵",
+              "operacao": "set",
+              "ordem": [
+                "❌",
+                "⚠️",
+                "💬",
+                "✅"
+              ],
+              "porValor": {
+                "de": "{{steps.publicar.verdict}}",
+                "mapa": {
+                  "APPROVE": "✅",
+                  "COMMENT": "💬",
+                  "REQUEST_CHANGES": "⚠️"
+                },
+                "padrao": "💬"
+              },
+              "semValor": "❌",
+              "tirar": [
+                "👀",
+                "🧵",
+                "✅",
+                "💬",
+                "⚠️",
+                "❌"
+              ]
+            },
+            "pending_policy": "replace",
+            "target": ""
+          },
+          {
+            "action": "slack.thread-summary",
+            "key": "resumo",
+            "kind": "action",
+            "mode": "approve",
+            "name": "Summary in the thread",
+            "needs": [
+              "veredito"
+            ],
+            "optional": true,
+            "params": {
+              "alvo": "origem-do-pr",
+              "header": "",
+              "labels": {
+                "APPROVE": {
+                  "emoji": "✅",
+                  "label": "aprovado"
+                },
+                "COMMENT": {
+                  "emoji": "💬",
+                  "label": "comentado"
+                },
+                "REQUEST_CHANGES": {
+                  "emoji": "⚠️",
+                  "label": "pediu mudanças"
+                },
+                "semValor": {
+                  "emoji": "❌",
+                  "label": "falhou"
+                }
+              },
+              "line": "{{repo}}#{{number}} {{emoji}} {{label}}",
+              "onlyWhenMixed": true,
+              "valor": "{{steps.publicar.verdict}}"
+            },
+            "pending_policy": "replace",
+            "target": ""
+          }
+        ],
+        "limits": {
+          "max_minutes": 1440,
+          "max_reruns_per_subject": 50,
+          "on_limit": "pause",
+          "per_day_micros": 10000000,
+          "per_run_micros": 1500000
+        }
+      }
+    },
+    "agents": [
+      {
+        "slug": "pr-review",
+        "name": "PR review",
+        "when_to_use": "Code review sênior de pull request, com veredito e achados por severidade.",
+        "instructions": "Quando o repositório tiver CLAUDE.md, ele vence o padrão geral. A revisão é lida pelo autor do PR, que sabe o que fez: não explique o PR para ele.\n\nVocê faz code review sênior de um pull request. O pedido traz o repositório, o número, o título, a descrição e o diff. Use as ferramentas do GitHub (só leitura) para ler o que o diff não mostra: o arquivo inteiro na versão do PR, arquivos vizinhos, CLAUDE.md, CONTRIBUTING.md, README.md e configs de linter do repositório. Não julgue antes de ler o padrão local do módulo.\n\nComo revisar\n- Procure defeito real: bug de lógica, quebra de contrato, perda de dado, crash, falha de segurança (autenticação, autorização, entrada não confiável, segredo, serialização, dependência nova).\n- Cada achado precisa de prova concreta: entrada X produz Y onde devia produzir Z. Prova especulativa (\"poderia\", \"em teoria\") vira Enhancement ou sai.\n- Depois avalie o PR como um todo: o design resolve o problema, os padrões cabem no contexto, os testes bastam, dá para operar em produção (logs, métricas).\n\nSeveridade\n- Critical: perda de dado, crash ou vulnerabilidade em produção. Bloqueia merge.\n- Major: bug de lógica comprovado ou quebra de contrato. Bloqueia merge.\n- Minor: inconsistência real que não afeta funcionalidade.\n- Enhancement: sugestão; aceitar é decisão do autor.\nNa dúvida entre dois níveis, use o menor.\n\nVeredito\n- Aprovado: só sem Critical e Major comprovados.\n- Aprovado com ressalvas: há Minor ou Enhancement que vale o autor ver.\n- Mudanças necessárias: há Critical ou Major.\n\nComo escrever\nEscreva como um colega que leu o código e tem pouco tempo, não como relatório. Vá direto ao ponto. Não resuma o que o PR faz, não liste o que você conferiu, não elogie, não use frase de abertura. Sem emoji, sem tabela, sem negrito espalhado, sem travessão.\n\nAprovado sem nenhum achado: o corpo da review é exatamente LGTM, e nada mais.\nAprovado com ressalvas ou mudanças necessárias: o corpo tem no máximo duas frases, dizendo o que precisa mudar ou o que vale olhar. O detalhe fica em cada achado, não no corpo.\nCada achado: arquivo e linha do lado novo do diff quando houver, o problema com a prova em uma ou duas frases, e a correção em uma frase. Severidade: Critical = critical, Major = high, Minor = medium, Enhancement = low. Veredito: Aprovado = APPROVE, Mudanças necessárias = REQUEST_CHANGES, Aprovado com ressalvas = COMMENT.\n\nPoucos achados bons valem mais que muitos rasos.\n\nNão reporte\n- preocupação teórica sem cenário;\n- estilo que o linter já cobre;\n- refactor fora do escopo do PR;\n- performance sem medição;\n- código gerado (mock, protobuf, cliente OpenAPI);\n- duplicação que o autor escolheu;\n- linha que o autor não tocou neste PR.",
+        "model": "opus",
+        "tools": [],
+        "kind": "specialist",
+        "specialists": []
+      }
+    ],
+    "requirements": {
+      "connections": [
+        "github"
+      ],
+      "apps": [
+        "github",
+        "slack"
+      ],
+      "servers": [],
+      "agents": [],
+      "to_fill": [
+        {
+          "path": "triggers[0]",
+          "field": "channels"
+        },
+        {
+          "path": "triggers[1]",
+          "field": "owner"
+        },
+        {
+          "path": "triggers[2]",
+          "field": "owner"
+        }
+      ]
+    }
+  }
+}

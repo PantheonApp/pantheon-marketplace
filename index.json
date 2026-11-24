@@ -1,8 +1,8 @@
 {
   "format": "app-marketplace-index",
   "version": 1,
-  "commit": "2900f117c6fed6e294c9c75a2eecb6b9261f3447",
-  "committedAt": 1795477797,
+  "commit": "531054bece4e6a33f57ab189c64673bb7f0d823b",
+  "committedAt": 1795489028,
   "items": [
     {
       "kind": "template",
@@ -78,6 +78,26 @@
       "tags": [
         "code-review",
         "github"
+      ]
+    },
+    {
+      "kind": "template",
+      "id": "revisar-prs-slack",
+      "version": 1,
+      "path": "templates/revisar-prs-slack.json",
+      "sha256": "1d14986ba36a9a3887e10dfe463d40e1fa7cc16595d063da0907e89583a04fd5",
+      "name": {
+        "en": "Review PRs from Slack",
+        "pt-BR": "Revisar PRs pelo Slack"
+      },
+      "description": {
+        "en": "Reviews a pull request when its link is posted in a Slack channel, and again when the author pushes after your review asked for changes or commented. Waits for CI and turns an approval into a comment when CI is not green. Reacts to the message with the verdict of all its PRs and posts a summary in the thread when verdicts differ. Every PR link in the channel starts a review, with no filter. Every action that writes outside waits for your approval. You pick the channels and GitHub owner when installing.",
+        "pt-BR": "Revisa o pull request quando o link aparece num canal do Slack, e de novo quando o autor sobe commit depois de uma review sua que pediu mudança ou comentou. Espera a esteira e troca a aprovação por comentário quando ela não está verde. Reage na mensagem com o veredito de todas as PRs dela e posta um resumo na thread quando os vereditos diferem. Todo link de PR no canal abre uma revisão, sem filtro. Toda ação que escreve fora espera a sua aprovação. Os canais e o dono no GitHub você escolhe ao instalar."
+      },
+      "tags": [
+        "code-review",
+        "github",
+        "slack"
       ]
     },
     {
