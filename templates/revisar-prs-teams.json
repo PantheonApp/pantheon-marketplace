@@ -1,7 +1,7 @@
 {
   "kind": "template",
   "id": "revisar-prs-teams",
-  "version": 1,
+  "version": 2,
   "name": {
     "en": "Review PRs from Teams",
     "pt-BR": "Revisar PRs pelo Teams"
@@ -170,20 +170,6 @@
             ]
           },
           {
-            "against": "^$",
-            "cases": [],
-            "compare": "matches",
-            "key": "origem",
-            "kind": "logic",
-            "name": "Channel or new commit?",
-            "needs": [
-              "revisar"
-            ],
-            "op": "if",
-            "optional": false,
-            "value": "{{event.chatId}}"
-          },
-          {
             "action": "github.review_comment",
             "key": "publicar",
             "kind": "action",
@@ -191,38 +177,7 @@
             "name": "Publish the review on GitHub",
             "needs": [
               "revisar",
-              "esteira",
-              "origem"
-            ],
-            "optional": false,
-            "params": {
-              "ciFrom": "esteira",
-              "ciNotGreenText": "A esteira não estava verde ({{stateLabel}}), então a aprovação virou comentário. Falhou: {{failed}}. Pendente: {{pending}}.",
-              "findings": "{{steps.revisar.findings}}",
-              "ifCiNotGreen": "comment",
-              "owner": "{{event.owner}}",
-              "pull": "{{event.pull}}",
-              "repo": "{{event.repoName}}",
-              "summary": "{{steps.revisar.summary}}",
-              "verdict": "{{steps.revisar.verdict}}"
-            },
-            "pending_policy": "replace",
-            "target": "",
-            "when": {
-              "branch": "true",
-              "step": "origem"
-            }
-          },
-          {
-            "action": "github.review_comment",
-            "key": "publicar_fila",
-            "kind": "action",
-            "mode": "approve",
-            "name": "Publish the review on GitHub (queue)",
-            "needs": [
-              "revisar",
-              "esteira",
-              "origem"
+              "esteira"
             ],
             "notify_when_queued": true,
             "optional": false,
@@ -238,11 +193,7 @@
               "verdict": "{{steps.revisar.verdict}}"
             },
             "pending_policy": "replace",
-            "target": "",
-            "when": {
-              "branch": "false",
-              "step": "origem"
-            }
+            "target": ""
           },
           {
             "action": "teams.react",
@@ -268,50 +219,6 @@
               ],
               "porValor": {
                 "de": "{{steps.publicar.verdict}}",
-                "mapa": {
-                  "APPROVE": "✅",
-                  "COMMENT": "💬",
-                  "REQUEST_CHANGES": "⚠️"
-                },
-                "padrao": "💬"
-              },
-              "semValor": "❌",
-              "tirar": [
-                "👀",
-                "🧵",
-                "✅",
-                "💬",
-                "⚠️",
-                "❌"
-              ]
-            },
-            "pending_policy": "replace",
-            "target": ""
-          },
-          {
-            "action": "teams.react",
-            "key": "veredito_fila",
-            "kind": "action",
-            "mode": "approve",
-            "name": "React with the verdict (queue)",
-            "needs": [
-              "publicar_fila"
-            ],
-            "optional": true,
-            "params": {
-              "alvo": "origem-do-pr",
-              "andamento": "👀",
-              "juntarPorMensagem": true,
-              "mixed": "🧵",
-              "operacao": "set",
-              "ordem": [
-                "❌",
-                "⚠️",
-                "💬",
-                "✅"
-              ],
-              "porValor": {
-                "de": "{{steps.publicar_fila.verdict}}",
                 "mapa": {
                   "APPROVE": "✅",
                   "COMMENT": "💬",
@@ -366,44 +273,6 @@
               "line": "{{repo}}#{{number}} {{emoji}} {{label}}",
               "onlyWhenMixed": true,
               "valor": "{{steps.publicar.verdict}}"
-            },
-            "pending_policy": "replace",
-            "target": ""
-          },
-          {
-            "action": "teams.thread-summary",
-            "key": "resumo_fila",
-            "kind": "action",
-            "mode": "approve",
-            "name": "Summary in the thread (queue)",
-            "needs": [
-              "veredito_fila"
-            ],
-            "optional": true,
-            "params": {
-              "alvo": "origem-do-pr",
-              "header": "",
-              "labels": {
-                "APPROVE": {
-                  "emoji": "✅",
-                  "label": "aprovado"
-                },
-                "COMMENT": {
-                  "emoji": "💬",
-                  "label": "comentado"
-                },
-                "REQUEST_CHANGES": {
-                  "emoji": "⚠️",
-                  "label": "pediu mudanças"
-                },
-                "semValor": {
-                  "emoji": "❌",
-                  "label": "falhou"
-                }
-              },
-              "line": "{{repo}}#{{number}} {{emoji}} {{label}}",
-              "onlyWhenMixed": true,
-              "valor": "{{steps.publicar_fila.verdict}}"
             },
             "pending_policy": "replace",
             "target": ""
