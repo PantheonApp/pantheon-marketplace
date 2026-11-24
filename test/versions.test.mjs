@@ -108,10 +108,20 @@ test("a direct push is checked against the commit before it", () => {
   assert.match(errors[0].message, /must go up from 1/);
 });
 
+/** The JSON files of a catalog folder; none when the folder is not there, as validateCatalog reads it. */
+function jsonFiles(folder) {
+  try {
+    return readdirSync(folder).filter((name) => name.endsWith(".json")).sort();
+  } catch (error) {
+    if (error.code === "ENOENT") return [];
+    throw error;
+  }
+}
+
 /** The first item of this repository, whatever it is, with its path. */
 function firstItem() {
   for (const folder of ["connections", "templates"]) {
-    const [name] = readdirSync(join(root, folder)).filter((n) => n.endsWith(".json")).sort();
+    const [name] = jsonFiles(join(root, folder));
     if (name !== undefined) return { path: `${folder}/${name}`, ...JSON.parse(readFileSync(join(root, folder, name), "utf8")) };
   }
   throw new Error("the repository has no item in connections/ or templates/");

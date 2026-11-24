@@ -19,14 +19,21 @@ test("a catalog is read folder by folder, the connection types and then the temp
   assert.deepEqual(items.map((i) => `${i.kind}:${i.id}`), ["connection:example-tickets", "template:example-alerts"]);
 });
 
+/** The JSON files of a catalog folder; none when the folder is not there, as validateCatalog reads it. */
+function jsonFiles(folder) {
+  try {
+    return readdirSync(folder).filter((name) => name.endsWith(".json")).sort();
+  } catch (error) {
+    if (error.code === "ENOENT") return [];
+    throw error;
+  }
+}
+
 test("the catalog in the repository is valid: every file of the connection types and the templates, and no package yet", async () => {
   const { items, errors } = await validateCatalog(root);
   assert.deepEqual(errors, []);
   const files = OPEN_FOLDERS.flatMap((folder) =>
-    readdirSync(join(root, folder))
-      .filter((name) => name.endsWith(".json"))
-      .sort()
-      .map((name) => `${FOLDERS[folder]}:${name.replace(/\.json$/, "")}`),
+    jsonFiles(join(root, folder)).map((name) => `${FOLDERS[folder]}:${name.replace(/\.json$/, "")}`),
   );
   assert.deepEqual(items.map((i) => `${i.kind}:${i.id}`), files);
   assert.equal(items.some((i) => i.kind === "package"), false);

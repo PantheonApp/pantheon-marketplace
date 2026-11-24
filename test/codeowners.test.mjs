@@ -9,6 +9,7 @@ import { OFFICIAL_CONNECTIONS } from "../scripts/lib/rules.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 // The file of an official id, the first on scripts/lib/official-connections.json.
+assert.ok(OFFICIAL_CONNECTIONS.size > 0, "scripts/lib/official-connections.json lists no official type");
 const official = `connections/${[...OFFICIAL_CONNECTIONS.keys()][0]}.json`;
 
 function withCodeowners(text) {
